@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { and, count, desc, eq, inArray, isNull, isNotNull } from "drizzle-orm";
@@ -59,6 +59,15 @@ export default async function LibraryPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
+  const user = await currentUser();
+  const userDisplayName =
+    user?.firstName && user?.lastName
+      ? `${user.firstName} ${user.lastName}`
+      : (user?.username ??
+        user?.primaryEmailAddress?.emailAddress ??
+        "Kullanıcı");
+  const userImageUrl = user?.imageUrl ?? null;
+
   const [activeList, archivedList] = await Promise.all([
     loadVideosForUser(userId, false),
     loadVideosForUser(userId, true),
@@ -88,6 +97,8 @@ export default async function LibraryPage() {
       activeVideos={toItems(activeList, viewersByVideo)}
       archivedVideos={toItems(archivedList, viewersByVideo)}
       appBaseUrl={appBaseUrl}
+      userDisplayName={userDisplayName}
+      userImageUrl={userImageUrl}
     />
   );
 }
