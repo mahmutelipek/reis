@@ -23,7 +23,8 @@ const clerkProtected = clerkMiddleware(async (auth, req) => {
   }
 });
 
-export default function middleware(
+/** Next.js 16+: `middleware` yerine `proxy` dosya kuralı (aynı davranış). */
+export default function proxy(
   request: NextRequest,
   event: NextFetchEvent,
 ) {
