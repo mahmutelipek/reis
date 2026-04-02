@@ -5,7 +5,7 @@ import { getDb } from "@/lib/db";
 import { videos } from "@/lib/db/schema";
 import { isClerkConfigured } from "@/lib/clerk-config";
 
-type Body = { title?: string };
+type Body = { title?: string; archived?: boolean };
 type Ctx = { params: Promise<{ videoId: string }> };
 
 export async function PATCH(req: Request, ctx: Ctx) {
@@ -28,11 +28,16 @@ export async function PATCH(req: Request, ctx: Ctx) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const title =
+  const titleRaw =
     typeof body.title === "string" ? body.title.trim().slice(0, 512) : "";
+  const hasTitle = titleRaw.length > 0;
+  const hasArchived = typeof body.archived === "boolean";
 
-  if (!title) {
-    return NextResponse.json({ error: "title required" }, { status: 400 });
+  if (!hasTitle && !hasArchived) {
+    return NextResponse.json(
+      { error: "title or archived required" },
+      { status: 400 },
+    );
   }
 
   const { videoId } = await ctx.params;
@@ -47,9 +52,22 @@ export async function PATCH(req: Request, ctx: Ctx) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  const patch: {
+    title?: string;
+    archivedAt?: Date | null;
+    updatedAt: Date;
+  } = { updatedAt: new Date() };
+
+  if (hasTitle) {
+    patch.title = titleRaw;
+  }
+  if (hasArchived) {
+    patch.archivedAt = body.archived ? new Date() : null;
+  }
+
   const [updated] = await db
     .update(videos)
-    .set({ title, updatedAt: new Date() })
+    .set(patch)
     .where(eq(videos.id, videoId))
     .returning();
 

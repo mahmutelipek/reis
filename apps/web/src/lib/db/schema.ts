@@ -27,6 +27,8 @@ export const videos = pgTable("videos", {
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
+  /** Doluysa kayıt Arşiv sekmesinde gösterilir */
+  archivedAt: timestamp("archived_at", { withTimezone: true }),
 });
 
 export type Video = typeof videos.$inferSelect;
