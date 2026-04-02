@@ -1,0 +1,18 @@
+{
+  "name": "promptly",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w promptly-web",
+    "build": "npm run build -w promptly-web",
+    "lint": "npm run lint -w promptly-web",
+    "db:generate": "npm run db:generate -w promptly-web",
+    "db:push": "npm run db:push -w promptly-web"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
