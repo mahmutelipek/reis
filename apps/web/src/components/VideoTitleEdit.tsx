@@ -60,8 +60,8 @@ export function VideoTitleEdit({
 
   const titleLinkClass =
     variant === "card"
-      ? "min-w-0 max-w-full text-sm font-semibold text-gray-900 hover:text-blue-600 hover:underline"
-      : "min-w-0 max-w-full font-medium text-foreground hover:text-blue-600 hover:underline dark:hover:text-blue-400";
+      ? "min-w-0 max-w-full text-sm font-semibold text-gray-900 hover:text-primary hover:underline"
+      : "min-w-0 max-w-full font-medium text-foreground hover:text-primary hover:underline";
 
   if (!editing) {
     return (
@@ -97,8 +97,8 @@ export function VideoTitleEdit({
           }}
           className={
             variant === "card"
-              ? "text-[10px] text-blue-600 underline"
-              : "text-xs text-blue-600 underline dark:text-blue-400"
+              ? "text-[10px] text-primary underline"
+              : "text-xs text-primary underline"
           }
         >
           Düzenle
@@ -134,7 +134,7 @@ export function VideoTitleEdit({
           type="button"
           onClick={save}
           disabled={busy}
-          className="rounded bg-blue-600 px-2 py-1 text-xs text-white disabled:opacity-50"
+          className="rounded bg-primary px-2 py-1 text-xs text-primary-foreground disabled:opacity-50"
         >
           Kaydet
         </button>

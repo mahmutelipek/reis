@@ -5,28 +5,20 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, type MouseEvent } from "react";
 import {
   Bell,
-  Briefcase,
-  Calendar,
   ChevronDown,
-  CreditCard,
   Disc,
-  Gift,
-  History,
+  HelpCircle,
   ImageIcon,
   Library,
-  LineChart,
   Link2,
   MonitorPlay,
   Search,
   Settings2,
-  Star,
   UserPlus,
-  Users,
   Video,
   Eye,
   MessageCircle,
   Smile,
-  Clock,
 } from "lucide-react";
 import { LibraryUserMenu } from "@/components/LibraryUserMenu";
 import { RetranscribeButton } from "@/components/RetranscribeButton";
@@ -36,7 +28,15 @@ import { VideoTitleEdit } from "@/components/VideoTitleEdit";
 import { VideoArchiveButton } from "@/components/VideoArchiveButton";
 import { VideoShareMenu } from "@/components/VideoShareMenu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,7 +51,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 
 export type LibraryVideoItem = {
   id: string;
@@ -129,12 +131,12 @@ function VideoCardLoom({
   }
 
   return (
-    <article className="video-card-loom group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-gray-100 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_20px_-2px_rgba(0,0,0,0.1)]">
+    <article className="video-card-loom group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
       {detailHref ? (
         <Link
           href={detailHref}
           prefetch
-          className="relative block aspect-video w-full cursor-pointer overflow-hidden bg-gray-100 no-underline outline-offset-2 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-blue-500"
+          className="relative block aspect-video w-full cursor-pointer overflow-hidden bg-gray-100 no-underline outline-offset-2 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-primary"
           aria-label={`${v.title} — videoyu aç`}
         >
           {thumb ? (
@@ -348,138 +350,114 @@ export function LibraryView({
         ? `${sortedArchived.length} video`
         : "—";
 
-  const navInactive =
-    "flex items-center gap-3 rounded-lg p-2 text-sm text-gray-600 hover:bg-gray-100";
-  const navDisabled =
-    "flex cursor-not-allowed items-center gap-3 rounded-lg p-2 text-sm text-gray-400 opacity-60";
-
   return (
-    <div className="flex h-svh w-full overflow-hidden bg-white text-gray-800">
-      <aside className="hidden w-64 shrink-0 flex-col overflow-y-auto border-r border-gray-200 md:flex [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-200">
-        <div className="mb-4 flex items-center justify-between p-4">
-          <div className="flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold text-white">
-              P
-            </div>
-            <span className="text-lg font-bold tracking-tight">Promptly</span>
-          </div>
-          <button
-            type="button"
-            className="text-gray-400 hover:text-gray-600"
-            aria-label="Kenar çubuğu (yakında)"
-            disabled
+    <div className="flex h-svh w-full overflow-hidden bg-[#F9FAFB] text-gray-900">
+      <aside className="hidden w-64 shrink-0 flex-col overflow-y-auto border-r border-gray-200 bg-white md:flex [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-200">
+        <div className="p-4 pb-2">
+          <Link
+            href="/library"
+            className="-m-1 flex min-w-0 items-center gap-2 rounded-md p-1 transition-colors hover:bg-muted/60"
           >
-            <span className="sr-only">Daralt</span>
-            <span className="text-lg" aria-hidden>
-              ≡
+            <div className="flex size-[22px] shrink-0 items-center justify-center rounded bg-primary text-primary-foreground">
+              <Video className="size-3.5" aria-hidden />
+            </div>
+            <span className="truncate text-[17px] font-bold tracking-tight">
+              Promptly
             </span>
-          </button>
+          </Link>
         </div>
 
-        <div className="mb-6 px-3">
+        <div className="px-3 pb-3">
           <DropdownMenu>
             <DropdownMenuTrigger
               nativeButton
-              className="flex w-full cursor-pointer items-center justify-between rounded-lg p-2 text-left hover:bg-gray-100"
+              className={cn(
+                buttonVariants({ variant: "outline" }),
+                "h-auto w-full justify-between gap-2 px-3 py-2.5 font-normal shadow-none",
+              )}
             >
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold text-gray-900">
-                  Çalışma alanı
+              <div className="flex flex-col items-start text-left">
+                <span className="text-sm font-semibold">Çalışma alanı</span>
+                <span className="text-xs text-muted-foreground">
+                  Varsayılan
                 </span>
-                <span className="text-xs text-gray-500">1 üye</span>
               </div>
-              <ChevronDown className="size-3.5 shrink-0 text-gray-400" />
+              <ChevronDown className="size-4 shrink-0 opacity-60" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-52">
+            <DropdownMenuContent align="start" className="w-56">
               <DropdownMenuItem>Varsayılan alan</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <button
-            type="button"
-            className="mt-2 flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm text-gray-600 hover:bg-gray-100"
-            disabled
-          >
-            <UserPlus className="size-3.5 shrink-0" />
-            Ekip davet et
-          </button>
-        </div>
-
-        <nav className="flex flex-1 flex-col gap-1 px-3">
-          <div className={navDisabled}>
-            <Star className="size-5 shrink-0 opacity-70" />
-            Senin için
-          </div>
-          <div className="flex items-center gap-3 rounded-lg border-l-4 border-blue-600 bg-blue-50 p-2 text-sm font-medium text-blue-600">
-            <Library className="size-5 shrink-0" />
-            Kütüphane
-          </div>
-          <div className={navDisabled}>
-            <Calendar className="size-5 shrink-0" />
-            Toplantılar
-          </div>
-          <div className={navDisabled}>
-            <Clock className="size-5 shrink-0" />
-            Sonra izle
-          </div>
-          <div className={navDisabled}>
-            <History className="size-5 shrink-0" />
-            Son açılanlar
-          </div>
-          <div className={navDisabled}>
-            <Gift className="size-5 shrink-0" />
-            Bonus
-          </div>
-          <Link href="/desktop/token" className={navInactive}>
-            <Link2 className="size-5 shrink-0" />
-            Masaüstü yedek
-          </Link>
-          <div className={navDisabled}>
-            <Settings2 className="size-5 shrink-0" />
-            Kişisel ayarlar
-          </div>
-
-          <div className="pt-6 pb-2">
-            <p className="px-2 text-xs font-semibold tracking-wider text-gray-400 uppercase">
-              Yönetim
-            </p>
-          </div>
-          <div className={navDisabled}>
-            <LineChart className="size-5 shrink-0" />
-            Yönetim
-          </div>
-          <div className={navDisabled}>
-            <Users className="size-5 shrink-0" />
-            Kullanıcılar
-          </div>
-          <div className={navDisabled}>
-            <Briefcase className="size-5 shrink-0" />
-            Çalışma alanı
-          </div>
-          <div className={navDisabled}>
-            <CreditCard className="size-5 shrink-0" />
-            Faturalandırma
-          </div>
-        </nav>
-
-        <div className="mt-auto space-y-4 p-4">
-          <div className="relative overflow-hidden rounded-xl border border-blue-100 bg-blue-50 p-4">
-            <p className="pr-6 text-sm font-semibold text-gray-800">
-              Ekibini davet et — ortak kütüphane yakında.
-            </p>
-            <Button
-              size="sm"
-              className="mt-3 w-full bg-blue-600 font-semibold text-white hover:bg-blue-700"
-              disabled
-            >
-              Davet gönder
-            </Button>
-          </div>
           <Button
-            className="h-12 w-full rounded-full bg-blue-600 font-bold text-white shadow-md hover:bg-blue-700"
+            variant="outline"
+            size="sm"
+            className="mt-2 w-full justify-start gap-2 shadow-none"
             type="button"
             onClick={() =>
               window.alert(
-                "Kayıt: macOS Promptly uygulamasını açın. «E-posta ile giriş yap» ile Clerk oturumu; gerekirse web’de Masaüstü yedek jeton.",
+                "Ekip daveti yakında: ortak kütüphane ve paylaşılan klasörler.",
+              )
+            }
+          >
+            <UserPlus className="size-4 shrink-0" />
+            Ekip davet et
+          </Button>
+        </div>
+
+        <Separator className="mx-3" />
+
+        <nav className="flex flex-1 flex-col gap-0.5 p-3" aria-label="Kütüphane">
+          <div
+            className="flex items-center gap-3 rounded-lg border-l-4 border-primary bg-primary/5 py-2 pr-2 pl-2 text-sm font-medium text-primary"
+            aria-current="page"
+          >
+            <Library className="size-5 shrink-0" />
+            Kütüphane
+          </div>
+          <Link
+            href="/desktop/token"
+            className={cn(
+              buttonVariants({ variant: "ghost" }),
+              "h-9 w-full justify-start gap-3 px-2 text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <Link2 className="size-5 shrink-0" />
+            Masaüstü bağlantısı
+          </Link>
+        </nav>
+
+        <div className="mt-auto space-y-3 p-4">
+          <Card className="border-primary/20 bg-primary/[0.06] shadow-none">
+            <CardHeader className="space-y-1 p-4 pb-2">
+              <CardTitle className="text-sm font-semibold leading-snug">
+                Ekibi büyüt
+              </CardTitle>
+              <CardDescription className="text-xs leading-relaxed">
+                Davet ve ortak alanlar hazır olunca buradan yönetilecek.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              <Button
+                size="sm"
+                className="w-full font-semibold"
+                type="button"
+                onClick={() =>
+                  window.alert(
+                    "Şimdilik videoları paylaşım linkiyle gönderebilirsin; toplu davet üzerinde çalışıyoruz.",
+                  )
+                }
+              >
+                Davet gönder
+              </Button>
+            </CardContent>
+          </Card>
+          <Button
+            size="lg"
+            className="h-12 w-full rounded-full font-bold shadow-md"
+            type="button"
+            onClick={() =>
+              window.alert(
+                "macOS Promptly: «E-posta ile giriş yap» → kayıt. Yedek: Masaüstü bağlantısı.",
               )
             }
           >
@@ -490,59 +468,88 @@ export function LibraryView({
       </aside>
 
       <main className="relative flex min-w-0 flex-1 flex-col bg-white">
-        <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-gray-100 px-4 sm:px-8">
+        <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-gray-200 bg-white px-4 sm:px-8">
           <div className="min-w-0 flex-1 max-w-2xl">
             <div className="relative">
-              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-gray-400" />
+              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Kişi, başlık veya video ara…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="h-10 rounded-full border-gray-200 bg-white pl-10 shadow-none focus-visible:border-blue-500 focus-visible:ring-blue-500/30"
+                className="h-10 rounded-full border-gray-200 bg-white pl-10 shadow-none focus-visible:border-primary focus-visible:ring-primary/25"
               />
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-3 sm:gap-4">
-            <div className="hidden items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-500 sm:flex">
-              <span className="font-semibold text-blue-600">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <Badge
+              variant="secondary"
+              className="hidden rounded-full px-3 py-1 text-sm font-normal sm:inline-flex"
+            >
+              <span className="font-semibold text-primary">
                 {activeVideos.length}/{videoQuotaMax}
               </span>
-              <span>video</span>
-            </div>
+              <span className="ml-1 text-muted-foreground">video</span>
+            </Badge>
             <Button
+              variant="outline"
               size="sm"
-              className="hidden font-bold text-white sm:inline-flex bg-blue-600 hover:bg-blue-700 lg:inline-flex"
-              disabled
+              className="hidden font-semibold sm:inline-flex"
+              type="button"
+              onClick={() =>
+                window.alert(
+                  "Yükseltme ve kota paketleri yakında; şimdilik mevcut kota ile devam edebilirsin.",
+                )
+              }
             >
               Yükselt
             </Button>
-            <button
-              type="button"
-              className="relative hidden text-gray-500 sm:block"
-              disabled
-              aria-label="Bildirimler"
-            >
-              <Bell className="size-5" />
-              <span className="absolute top-0 right-0 size-2 rounded-full border-2 border-white bg-red-500" />
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                nativeButton
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "icon" }),
+                  "relative shrink-0",
+                )}
+                aria-label="Bildirimler"
+              >
+                <Bell className="size-5 text-muted-foreground" />
+                <span className="absolute top-1 right-1 size-2 rounded-full bg-primary ring-2 ring-white" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem
+                  onClick={() =>
+                    window.alert(
+                      "Henüz bildirim yok. Video işlendiğinde ve paylaşımda burada görünecek.",
+                    )
+                  }
+                >
+                  Bildirim merkezi (yakında)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <LibraryUserMenu />
           </div>
         </header>
 
         <div className="flex-1 overflow-y-auto p-4 sm:p-8 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-200">
           <div className="mb-8">
-            <span className="text-sm text-gray-500">Kütüphane</span>
+            <span className="text-sm text-muted-foreground">Kütüphane</span>
             <div className="mt-1 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-              <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">
+              <h1 className="text-[22px] font-bold leading-snug tracking-tight text-foreground sm:text-3xl sm:font-extrabold">
                 Videolar
               </h1>
               <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-gray-200 font-semibold"
-                  disabled
+                  className="border-gray-200 font-semibold shadow-none"
+                  type="button"
+                  onClick={() =>
+                    window.alert(
+                      "Klasörler yakında; şimdilik tüm videolar tek listede.",
+                    )
+                  }
                 >
                   Yeni klasör
                 </Button>
@@ -550,11 +557,11 @@ export function LibraryView({
                   <div className="inline-flex rounded-lg shadow-sm">
                     <Button
                       size="sm"
-                      className="rounded-r-none border-r border-blue-500 bg-blue-600 font-semibold text-white hover:bg-blue-700"
+                      className="rounded-r-none border-r border-primary/30 font-semibold shadow-none"
                       type="button"
                       onClick={() =>
                         window.alert(
-                          "macOS Promptly: «E-posta ile giriş yap» → kayıt al. Yedek: /desktop/token.",
+                          "macOS Promptly: «E-posta ile giriş yap» → kayıt. Yedek: Masaüstü bağlantısı.",
                         )
                       }
                     >
@@ -562,7 +569,10 @@ export function LibraryView({
                     </Button>
                     <DropdownMenuTrigger
                       nativeButton
-                      className="inline-flex items-center justify-center rounded-r-lg bg-blue-600 px-2.5 text-white hover:bg-blue-700"
+                      className={cn(
+                        buttonVariants({ size: "sm" }),
+                        "rounded-l-none rounded-r-lg px-2.5 shadow-none",
+                      )}
                     >
                       <ChevronDown className="size-4" />
                     </DropdownMenuTrigger>
@@ -595,31 +605,31 @@ export function LibraryView({
               >
                 <TabsTrigger
                   value="videos"
-                  className="rounded-none border-0 border-b-2 border-transparent bg-transparent px-1 pb-4 text-sm font-medium text-gray-500 shadow-none hover:text-gray-700 data-active:border-blue-600 data-active:bg-transparent data-active:text-gray-900 data-active:shadow-none"
+                  className="rounded-none border-0 border-b-2 border-transparent bg-transparent px-1 pb-4 text-sm font-medium text-muted-foreground shadow-none hover:text-foreground data-active:border-primary data-active:bg-transparent data-active:text-foreground data-active:shadow-none"
                 >
                   Videolar
                 </TabsTrigger>
                 <TabsTrigger
                   value="screenshots"
-                  className="rounded-none border-0 border-b-2 border-transparent bg-transparent px-1 pb-4 text-sm font-medium text-gray-500 shadow-none hover:text-gray-700 data-active:border-blue-600 data-active:bg-transparent data-active:text-gray-900 data-active:shadow-none"
+                  className="rounded-none border-0 border-b-2 border-transparent bg-transparent px-1 pb-4 text-sm font-medium text-muted-foreground shadow-none hover:text-foreground data-active:border-primary data-active:bg-transparent data-active:text-foreground data-active:shadow-none"
                 >
                   Ekran görüntüleri
                 </TabsTrigger>
                 <TabsTrigger
                   value="archive"
-                  className="rounded-none border-0 border-b-2 border-transparent bg-transparent px-1 pb-4 text-sm font-medium text-gray-500 shadow-none hover:text-gray-700 data-active:border-blue-600 data-active:bg-transparent data-active:text-gray-900 data-active:shadow-none"
+                  className="rounded-none border-0 border-b-2 border-transparent bg-transparent px-1 pb-4 text-sm font-medium text-muted-foreground shadow-none hover:text-foreground data-active:border-primary data-active:bg-transparent data-active:text-foreground data-active:shadow-none"
                 >
                   Arşiv
                 </TabsTrigger>
               </TabsList>
-              <div className="pb-2 text-xs font-medium text-gray-500 sm:pb-0">
+              <div className="pb-2 text-xs font-medium text-muted-foreground sm:pb-0">
                 {tabCountLabel}
               </div>
             </div>
 
             <TabsContent value="videos" className="mt-0 flex-1">
               <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                <h2 className="text-lg font-bold text-gray-900">Videolar</h2>
+                <h2 className="text-lg font-bold text-foreground">Videolar</h2>
                 <div className="flex flex-wrap gap-2">
                   <Select
                     value={sortBy}
@@ -655,16 +665,18 @@ export function LibraryView({
               </div>
 
               {sortedActive.length === 0 ? (
-                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50/80 px-6 py-20 text-center">
-                  <MonitorPlay className="mb-4 size-14 text-gray-300" />
-                  <p className="text-base font-semibold text-gray-900">
-                    Henüz video yok
-                  </p>
-                  <p className="mt-2 max-w-md text-sm text-gray-500">
-                    Soldan <strong>Video kaydet</strong> veya macOS uygulamasıyla
-                    kayıt oluşturun.
-                  </p>
-                </div>
+                <Card className="border-dashed shadow-none">
+                  <CardContent className="flex flex-col items-center justify-center px-6 py-16 text-center">
+                    <MonitorPlay className="mb-4 size-14 text-muted-foreground/40" />
+                    <p className="text-base font-semibold text-foreground">
+                      Henüz video yok
+                    </p>
+                    <p className="mt-2 max-w-md text-sm text-muted-foreground">
+                      Soldan <strong>Video kaydet</strong> veya macOS
+                      uygulamasıyla kayıt oluştur.
+                    </p>
+                  </CardContent>
+                </Card>
               ) : (
                 <VideoGrid
                   items={sortedActive}
@@ -677,26 +689,30 @@ export function LibraryView({
             </TabsContent>
 
             <TabsContent value="screenshots" className="mt-0 flex-1">
-              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50/80 px-6 py-20 text-center">
-                <ImageIcon className="mb-4 size-14 text-gray-300" />
-                <p className="text-base font-semibold text-gray-900">
-                  Ekran görüntüleri
-                </p>
-                <p className="mt-2 max-w-md text-sm text-gray-500">
-                  Yakında tek kare yakalama.
-                </p>
-              </div>
+              <Card className="border-dashed shadow-none">
+                <CardContent className="flex flex-col items-center justify-center px-6 py-16 text-center">
+                  <ImageIcon className="mb-4 size-14 text-muted-foreground/40" />
+                  <p className="text-base font-semibold text-foreground">
+                    Ekran görüntüleri
+                  </p>
+                  <p className="mt-2 max-w-md text-sm text-muted-foreground">
+                    Tek kare yakalama yakında eklenecek.
+                  </p>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="archive" className="mt-0 flex-1">
               {sortedArchived.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50/80 px-6 py-16 text-center text-sm text-gray-500">
-                  Arşiv boş. Videolar sekmesinden arşivleyin.
-                </div>
+                <Card className="border-dashed shadow-none">
+                  <CardContent className="px-6 py-14 text-center text-sm text-muted-foreground">
+                    Arşiv boş. Videolar sekmesinden arşivleyebilirsin.
+                  </CardContent>
+                </Card>
               ) : (
                 <>
                   <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                    <h2 className="text-lg font-bold text-gray-900">Arşiv</h2>
+                    <h2 className="text-lg font-bold text-foreground">Arşiv</h2>
                   </div>
                   <VideoGrid
                     items={sortedArchived}
@@ -711,14 +727,21 @@ export function LibraryView({
           </Tabs>
         </div>
 
-        <button
+        <Button
           type="button"
-          className="fixed right-6 bottom-6 z-40 flex size-10 items-center justify-center rounded-lg border border-gray-200 bg-white shadow-lg hover:bg-gray-50"
+          variant="outline"
+          size="icon"
+          className="fixed right-6 bottom-6 z-40 size-10 rounded-lg shadow-md"
           title="Yardım"
           aria-label="Yardım"
+          onClick={() =>
+            window.alert(
+              "Promptly: kayıt için macOS uygulaması; paylaşım için video kartından menü. Sorun olursa destek kanalına yaz.",
+            )
+          }
         >
-          <span className="text-lg text-gray-600">?</span>
-        </button>
+          <HelpCircle className="size-5 text-muted-foreground" />
+        </Button>
       </main>
 
     </div>

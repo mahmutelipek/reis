@@ -3,7 +3,6 @@
 import { Check, Link2, UserPlus } from "lucide-react";
 import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 type Props = {
   /** Loom tarzı üst çubuk: Paylaş + bağlantı ikonu (ikisi de URL kopyalar) */
@@ -27,15 +26,13 @@ export function PublicShareCopyButton({ layout = "default" }: Props) {
   }, []);
 
   if (layout === "loom-toolbar") {
-    const primary = cn(
-      "flex h-9 items-center gap-1.5 rounded-full bg-[#0055FF] px-3.5 text-[14px] font-medium text-white shadow-none transition-colors hover:bg-blue-700",
-    );
-    const iconOnly = cn(
-      "flex size-[34px] shrink-0 items-center justify-center rounded-full bg-[#0055FF] text-white transition-colors hover:bg-blue-700",
-    );
     return (
       <div className="flex items-center gap-2">
-        <button type="button" className={primary} onClick={() => void copy()}>
+        <Button
+          type="button"
+          className="h-9 rounded-full px-3.5 text-[14px] font-medium shadow-none"
+          onClick={() => void copy()}
+        >
           {done ? (
             <>
               <Check className="size-4" aria-hidden />
@@ -47,10 +44,11 @@ export function PublicShareCopyButton({ layout = "default" }: Props) {
               Paylaş
             </>
           )}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className={iconOnly}
+          size="icon"
+          className="size-[34px] rounded-full shadow-none"
           aria-label="Bağlantıyı kopyala"
           onClick={() => void copy()}
         >
@@ -59,7 +57,7 @@ export function PublicShareCopyButton({ layout = "default" }: Props) {
           ) : (
             <Link2 className="size-[18px]" aria-hidden />
           )}
-        </button>
+        </Button>
       </div>
     );
   }

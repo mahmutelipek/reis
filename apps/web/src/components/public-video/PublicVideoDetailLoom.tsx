@@ -101,7 +101,7 @@ export function PublicVideoDetailLoom({
             href="/library"
             className="flex min-w-0 cursor-pointer items-center gap-2"
           >
-            <div className="flex size-[22px] shrink-0 items-center justify-center rounded bg-violet-700 text-white">
+            <div className="flex size-[22px] shrink-0 items-center justify-center rounded bg-primary text-primary-foreground">
               <Video className="size-3.5" aria-hidden />
             </div>
             <span className="truncate text-[17px] font-bold tracking-tight">
@@ -171,7 +171,7 @@ export function PublicVideoDetailLoom({
                 shareSlug={shareSlug}
                 playbackId={playbackId}
                 title={title}
-                accentColor="rgb(0 85 255)"
+                accentColor="rgb(237 69 49)"
                 className="aspect-video h-full w-full rounded-lg"
               />
               <Avatar className="pointer-events-none absolute bottom-6 left-6 z-10 size-[70px] border-4 border-white shadow-md">
@@ -277,7 +277,7 @@ export function PublicVideoDetailLoom({
                     key={value}
                     value={value}
                     className={cn(
-                      "rounded-none border-0 border-b-2 border-transparent px-3 py-3 text-[13px] font-medium data-active:border-[#0055FF] data-active:text-[#0055FF] data-active:after:opacity-0",
+                      "rounded-none border-0 border-b-2 border-transparent px-3 py-3 text-[13px] font-medium data-active:border-primary data-active:text-primary data-active:after:opacity-0",
                       "text-gray-600 hover:text-gray-900",
                     )}
                   >
@@ -296,14 +296,14 @@ export function PublicVideoDetailLoom({
                         <h3 className="mb-1.5 flex items-center gap-1.5 text-[15px] font-bold text-gray-900">
                           Promptly Pro
                           <Sparkles
-                            className="size-4 text-violet-600"
+                            className="size-4 text-primary"
                             aria-hidden
                           />
                         </h3>
                         <p className="mb-1.5 text-[12px] leading-snug text-gray-600">
                           Gelişmiş düzenleme ve AI özellikleri için yükselt.
                         </p>
-                        <span className="text-[12px] font-medium text-[#0055FF] group-hover:underline">
+                        <span className="text-[12px] font-medium text-primary group-hover:underline">
                           Yakında
                         </span>
                       </div>
@@ -392,7 +392,7 @@ export function PublicVideoDetailLoom({
 
       <Link
         href="/library"
-        className="fixed bottom-6 left-6 z-50 flex size-11 items-center justify-center rounded-xl bg-[#0055FF] text-white shadow-lg transition-colors hover:bg-blue-700"
+        className="fixed bottom-6 left-6 z-50 flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg transition-colors hover:bg-primary/90"
         aria-label="Kütüphane"
       >
         <Video className="size-[22px]" aria-hidden />

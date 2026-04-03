@@ -57,7 +57,7 @@ export function TrackedMuxPlayer({
   shareSlug,
   playbackId,
   title,
-  accentColor = "rgb(59 130 246)",
+  accentColor = "rgb(237 69 49)",
   className,
 }: Props) {
   const sessionId = useViewSessionId(shareSlug);
