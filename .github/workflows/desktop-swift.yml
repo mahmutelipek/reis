@@ -1,0 +1,30 @@
+# macOS 26 görüntüsü: Swift + Xcode CLT — bkz.
+# https://github.com/actions/runner-images/blob/main/images/macos/macos-26-Readme.md
+name: Desktop (Swift)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/desktop/**"
+      - ".github/workflows/desktop-swift.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/desktop/**"
+      - ".github/workflows/desktop-swift.yml"
+
+jobs:
+  build:
+    runs-on: macos-26
+    defaults:
+      run:
+        working-directory: apps/desktop
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Swift build (debug)
+        run: swift build -v
+
+      - name: Swift build (release)
+        run: swift build -c release -v
