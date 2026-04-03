@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMemo, useState, type MouseEvent } from "react";
 import {
   Archive,
   Bell,
@@ -103,44 +104,81 @@ function VideoCardLoom({
   userDisplayName: string;
   userImageUrl: string | null;
 }) {
+  const router = useRouter();
   const thumb =
     v.muxPlaybackId && v.status === "ready"
       ? `https://image.mux.com/${v.muxPlaybackId}/thumbnail.jpg?time=1&width=720&fit_mode=preserve`
       : null;
 
+  const slug = v.shareSlug.trim();
+  const detailHref = slug ? `/v/${slug}` : "";
+
+  function openVideoDetail(e: MouseEvent) {
+    const t = e.target as HTMLElement | null;
+    if (t?.closest("[data-card-interactive]")) return;
+    if (t?.closest("a[href]")) return;
+    if (!detailHref) return;
+    e.preventDefault();
+    router.push(detailHref);
+  }
+
   return (
-    <div className="group flex flex-col rounded-xl border border-border/80 bg-card shadow-sm transition-shadow hover:shadow-md">
-      <Link
-        href={v.status === "ready" ? `/v/${v.shareSlug}` : "#"}
-        className={v.status === "ready" ? "block" : "pointer-events-none block"}
-        aria-label={v.title}
-      >
-        <div className="relative aspect-video w-full overflow-hidden rounded-t-xl bg-muted">
+    <article className="group flex flex-col overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm transition-shadow hover:shadow-md">
+      {detailHref ? (
+        <Link
+          href={detailHref}
+          prefetch
+          className="relative block aspect-video w-full cursor-pointer overflow-hidden rounded-t-xl bg-muted no-underline outline-offset-2 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label={`${v.title} — videoyu aç`}
+        >
           {thumb ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={thumb}
               alt=""
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+              draggable={false}
+              className="h-full w-full select-none object-cover transition-transform duration-300 group-hover:scale-[1.02]"
             />
           ) : (
             <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-slate-200/80 via-background to-violet-200/40 dark:from-slate-800/50 dark:to-violet-950/40">
               <Video className="size-12 text-muted-foreground/50" />
               <span className="text-xs font-medium text-muted-foreground">
-                {v.status}
+                {v.status === "uploading" ? "Yükleniyor / işleniyor" : v.status}
               </span>
             </div>
           )}
           <Badge
             variant="secondary"
-            className="absolute right-2 bottom-2 border-0 bg-black/70 text-[11px] font-medium text-white hover:bg-black/80"
+            className="pointer-events-none absolute right-2 bottom-2 border-0 bg-black/70 text-[11px] font-medium text-white"
           >
             {v.status === "ready" ? "Video" : "İşleniyor"}
           </Badge>
+        </Link>
+      ) : (
+        <div className="relative aspect-video w-full overflow-hidden rounded-t-xl bg-muted">
+          <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+            Geçersiz paylaşım bağlantısı
+          </div>
         </div>
-      </Link>
+      )}
 
-      <div className="space-y-2 p-3">
+      {detailHref ? (
+        <div className="border-b border-border/60 px-3 py-2">
+          <Link
+            href={detailHref}
+            prefetch
+            className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 no-underline hover:underline dark:text-blue-400"
+          >
+            Videoyu aç
+            <span aria-hidden>→</span>
+          </Link>
+        </div>
+      ) : null}
+
+      <div
+        className="cursor-pointer space-y-2 p-3"
+        onClick={openVideoDetail}
+      >
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <Avatar size="sm" className="ring-1 ring-border">
@@ -155,7 +193,12 @@ function VideoCardLoom({
               {userDisplayName}
             </span>
           </div>
-          <div className="flex shrink-0 items-center gap-1">
+          <div
+            className="flex shrink-0 items-center gap-1"
+            data-card-interactive
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+          >
             <VideoShareMenu
               shareSlug={v.shareSlug}
               appBaseUrl={appBaseUrl}
@@ -166,7 +209,11 @@ function VideoCardLoom({
         </div>
 
         <div className="min-w-0">
-          <VideoTitleEdit videoId={v.id} initialTitle={v.title} />
+          <VideoTitleEdit
+            videoId={v.id}
+            initialTitle={v.title}
+            detailHref={detailHref || undefined}
+          />
         </div>
 
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -180,10 +227,17 @@ function VideoCardLoom({
           <span className="inline-flex items-center gap-1 opacity-50">
             <Smile className="size-3.5" aria-hidden />0
           </span>
-          <span className="ml-auto text-[10px]">{relativeTimeTr(v.createdAt)}</span>
+          <span className="ml-auto text-[10px]">
+            {relativeTimeTr(v.createdAt)}
+          </span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-2">
+        <div
+          className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-2"
+          data-card-interactive
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
           <VideoArchiveButton videoId={v.id} archived={archived} />
           {v.status === "ready" &&
           (v.transcriptStatus === "error" ||
@@ -192,7 +246,12 @@ function VideoCardLoom({
           ) : null}
         </div>
 
-        <details className="group/details rounded-lg border border-dashed border-border/80 bg-muted/20 text-xs">
+        <details
+          className="group/details rounded-lg border border-dashed border-border/80 bg-muted/20 text-xs"
+          data-card-interactive
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
           <summary className="cursor-pointer list-none px-2 py-1.5 font-medium text-muted-foreground marker:hidden [&::-webkit-details-marker]:hidden">
             <span className="inline-flex items-center gap-1">
               <Settings2 className="size-3.5" />
@@ -212,7 +271,7 @@ function VideoCardLoom({
           </div>
         </details>
       </div>
-    </div>
+    </article>
   );
 }
 

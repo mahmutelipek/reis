@@ -28,6 +28,7 @@ struct ContentView: View {
 
     @State private var uploadLog: String = ""
     @State private var uploadBusy = false
+    @State private var uploadProgress: Double?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -70,7 +71,11 @@ struct ContentView: View {
                 }
 
                 if let url = recorder.lastRecordingURL, !recorder.isRecording, desktop.canUpload {
-                    Button(uploadBusy ? "Yükleniyor…" : "Son kaydı yükle") {
+                    Button(
+                        uploadBusy
+                            ? (uploadProgress.map { String(format: "Yükleniyor… %d%%", Int($0 * 100)) } ?? "Yükleniyor…")
+                            : "Son kaydı yükle"
+                    ) {
                         Task { await upload(url) }
                     }
                     .disabled(uploadBusy)
@@ -112,19 +117,28 @@ struct ContentView: View {
     private func upload(_ file: URL) async {
         guard desktop.canUpload else { return }
         uploadBusy = true
-        uploadLog = "Yükleme başlıyor…"
-        defer { uploadBusy = false }
+        uploadProgress = nil
+        let bytes = (try? FileManager.default.attributesOfItem(atPath: file.path)[.size] as? NSNumber)?.int64Value ?? 0
+        let mb = Double(bytes) / 1_048_576
+        uploadLog = String(format: "Dosya ~%.1f MB — sunucuya gönderiliyor…", mb)
+        defer {
+            uploadBusy = false
+            uploadProgress = nil
+        }
         do {
             let title = file.deletingPathExtension().lastPathComponent
             let r = try await DesktopUpload.uploadRecording(
                 fileURL: file,
                 title: title,
                 apiBase: desktop.apiBase,
-                apiKey: desktop.apiKey
+                apiKey: desktop.apiKey,
+                onProgress: { p in
+                    uploadProgress = p
+                }
             )
             let base = desktop.apiBase.trimmingCharacters(in: .whitespacesAndNewlines)
                 .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-            uploadLog = "Tamam: \(base)/v/\(r.shareSlug)"
+            uploadLog = "Tamam: \(base)/v/\(r.shareSlug)\nMux işlemesi (oynatılabilir hale gelmesi) birkaç dakika sürebilir."
         } catch {
             uploadLog = error.localizedDescription
         }

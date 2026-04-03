@@ -1,11 +1,21 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-type Props = { videoId: string; initialTitle: string };
+type Props = {
+  videoId: string;
+  initialTitle: string;
+  /** Paylaşım detay URL’si (örn. /v/abc); verilirse başlık tıklanabilir olur. */
+  detailHref?: string;
+};
 
-export function VideoTitleEdit({ videoId, initialTitle }: Props) {
+export function VideoTitleEdit({
+  videoId,
+  initialTitle,
+  detailHref,
+}: Props) {
   const router = useRouter();
   const [value, setValue] = useState(initialTitle);
   const [editing, setEditing] = useState(false);
@@ -48,12 +58,25 @@ export function VideoTitleEdit({ videoId, initialTitle }: Props) {
   if (!editing) {
     return (
       <div className="flex flex-wrap items-center gap-2">
-        <span className="font-medium text-zinc-900 dark:text-zinc-100">
-          {initialTitle}
-        </span>
+        {detailHref ? (
+          <Link
+            href={detailHref}
+            prefetch
+            className="min-w-0 max-w-full font-medium text-foreground hover:text-blue-600 hover:underline dark:hover:text-blue-400"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span className="line-clamp-2 text-pretty">{initialTitle}</span>
+          </Link>
+        ) : (
+          <span className="font-medium text-zinc-900 dark:text-zinc-100">
+            {initialTitle}
+          </span>
+        )}
         <button
           type="button"
-          onClick={() => {
+          data-card-interactive
+          onClick={(e) => {
+            e.stopPropagation();
             setValue(initialTitle);
             setEditing(true);
             setErr(null);
@@ -62,13 +85,26 @@ export function VideoTitleEdit({ videoId, initialTitle }: Props) {
         >
           Düzenle
         </button>
-        {err ? <span className="text-xs text-red-500">{err}</span> : null}
+        {err ? (
+          <span
+            className="text-xs text-red-500"
+            data-card-interactive
+            onClick={(e) => e.stopPropagation()}
+          >
+            {err}
+          </span>
+        ) : null}
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-1">
+    <div
+      className="flex flex-col gap-1"
+      data-card-interactive
+      onClick={(e) => e.stopPropagation()}
+      onKeyDown={(e) => e.stopPropagation()}
+    >
       <div className="flex flex-wrap items-center gap-2">
         <input
           value={value}

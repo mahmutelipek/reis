@@ -11,6 +11,8 @@ import {
 
 export type PublicVideoResult =
   | { kind: "not_found" }
+  | { kind: "processing"; video: Video }
+  | { kind: "failed"; video: Video }
   | { kind: "misconfigured"; video: Video }
   | { kind: "locked"; video: Video }
   | { kind: "ok"; video: Video };
@@ -24,7 +26,7 @@ export async function resolvePublicVideo(
     .where(eq(videos.shareSlug, shareSlug))
     .limit(1);
 
-  if (!video || video.status !== "ready" || !video.muxPlaybackId) {
+  if (!video) {
     return { kind: "not_found" };
   }
 
@@ -39,6 +41,15 @@ export async function resolvePublicVideo(
 
   if (locked && !unlocked) {
     return { kind: "locked", video };
+  }
+
+  if (video.status === "error") {
+    return { kind: "failed", video };
+  }
+
+  const playable = video.status === "ready" && !!video.muxPlaybackId;
+  if (!playable) {
+    return { kind: "processing", video };
   }
 
   return { kind: "ok", video };

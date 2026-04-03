@@ -46,6 +46,22 @@ export default async function EmbedVideoPage({ params }: Props) {
     );
   }
 
+  if (result.kind === "processing") {
+    return (
+      <div className="flex min-h-[200px] items-center justify-center bg-black p-4 text-center text-xs text-zinc-400">
+        Video hazırlanıyor…
+      </div>
+    );
+  }
+
+  if (result.kind === "failed") {
+    return (
+      <div className="flex min-h-[200px] items-center justify-center bg-black p-4 text-center text-xs text-zinc-500">
+        Video işlenemedi.
+      </div>
+    );
+  }
+
   const { video } = result;
 
   return (

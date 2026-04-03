@@ -11,6 +11,7 @@ type MuxWebhookPayload = {
   object?: { id?: string; type?: string };
   data?: {
     id?: string;
+    upload_id?: string;
     playback_ids?: { id: string }[];
     passthrough?: string;
     name?: string;
@@ -98,6 +99,24 @@ export async function POST(req: Request) {
       }
     } catch {
       /* ignore invalid passthrough */
+    }
+
+    if (!videoId && asset.upload_id) {
+      const [v] = await getDb()
+        .select({ id: videos.id })
+        .from(videos)
+        .where(eq(videos.muxUploadId, asset.upload_id))
+        .limit(1);
+      videoId = v?.id;
+    }
+
+    if (!videoId && asset.id) {
+      const [v] = await getDb()
+        .select({ id: videos.id })
+        .from(videos)
+        .where(eq(videos.muxAssetId, asset.id))
+        .limit(1);
+      videoId = v?.id;
     }
 
     if (videoId && playbackId && asset.id) {

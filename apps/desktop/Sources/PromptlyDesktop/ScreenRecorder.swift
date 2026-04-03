@@ -61,8 +61,19 @@ final class ScreenRecorder: NSObject, ObservableObject {
             let cfg = SCStreamConfiguration()
             cfg.showsCursor = true
             cfg.capturesAudio = true
-            cfg.width = max(640, display.width)
-            cfg.height = max(360, display.height)
+            // Tam 4K/5K kayıt dosyayı şişirir → yükleme çok uzar. 1920 kenar üstü ölçekle.
+            let dw = display.width
+            let dh = display.height
+            let maxEdge = 1920
+            var capW = dw
+            var capH = dh
+            if dw > maxEdge || dh > maxEdge {
+                let s = min(Double(maxEdge) / Double(dw), Double(maxEdge) / Double(dh))
+                capW = max(640, (Int(Double(dw) * s) / 2) * 2)
+                capH = max(360, (Int(Double(dh) * s) / 2) * 2)
+            }
+            cfg.width = capW
+            cfg.height = capH
             cfg.minimumFrameInterval = CMTime(value: 1, timescale: 60)
 
             let newStream = SCStream(filter: filter, configuration: cfg, delegate: self)
@@ -144,12 +155,19 @@ final class ScreenRecorder: NSObject, ObservableObject {
         try? FileManager.default.removeItem(at: url)
 
         let w = try AVAssetWriter(outputURL: url, fileType: .mp4)
+        // ~4.5 Mbps hedef: ekran kaydı için yeterli, dosya boyutu ve upload süresi belirgin düşer.
+        let bitrate = 4_500_000
         let vInput = AVAssetWriterInput(
             mediaType: .video,
             outputSettings: [
                 AVVideoCodecKey: AVVideoCodecType.h264,
                 AVVideoWidthKey: dims.width,
                 AVVideoHeightKey: dims.height,
+                AVVideoCompressionPropertiesKey: [
+                    AVVideoAverageBitRateKey: bitrate,
+                    AVVideoMaxKeyFrameIntervalKey: 60,
+                    AVVideoProfileLevelKey: AVVideoProfileLevelH264BaselineAutoLevel,
+                ] as [String: Any],
             ],
             sourceFormatHint: format
         )
