@@ -5,6 +5,13 @@ import {
   LibraryView,
   type LibraryVideoItem,
 } from "@/components/LibraryView";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { getDb } from "@/lib/db";
 import { videos, videoViews } from "@/lib/db/schema";
 import { isClerkConfigured } from "@/lib/clerk-config";
@@ -44,10 +51,34 @@ function toItems(
 export default async function LibraryPage() {
   if (!isClerkConfigured()) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-16">
-        <p className="text-muted-foreground">
-          Clerk yapılandırılmadı. Ortam değişkenlerini kontrol edin.
-        </p>
+      <div className="flex min-h-svh items-center justify-center bg-muted/50 p-4">
+        <Card className="w-full max-w-lg">
+          <CardHeader>
+            <CardTitle>Clerk yapılandırılmadı</CardTitle>
+            <CardDescription>
+              Tam deneyim için ortam değişkenlerini doldurman gerekir.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-muted-foreground">
+            <p>
+              <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
+                apps/web/.env.example
+              </code>{" "}
+              dosyasını{" "}
+              <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
+                .env.local
+              </code>{" "}
+              olarak kopyala;{" "}
+              <strong className="text-foreground">Clerk</strong> ve{" "}
+              <strong className="text-foreground">DATABASE_URL</strong> anahtarlarını
+              ekle. Ardından{" "}
+              <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
+                npm run dev
+              </code>{" "}
+              ile yeniden başlat.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     );
   }

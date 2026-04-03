@@ -19,8 +19,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Promptly",
-  description:
-    "Kurumsal async video ve görünmez teleprompter — söyle, göster, paylaş.",
+  description: "Async kurumsal video kütüphanesi ve paylaşım.",
 };
 
 export default function RootLayout({
