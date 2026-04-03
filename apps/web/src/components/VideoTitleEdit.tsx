@@ -9,12 +9,15 @@ type Props = {
   initialTitle: string;
   /** Paylaşım detay URL’si (örn. /v/abc); verilirse başlık tıklanabilir olur. */
   detailHref?: string;
+  /** Kütüphane (Loom) kartı: kompakt başlık */
+  variant?: "default" | "card";
 };
 
 export function VideoTitleEdit({
   videoId,
   initialTitle,
   detailHref,
+  variant = "default",
 }: Props) {
   const router = useRouter();
   const [value, setValue] = useState(initialTitle);
@@ -55,6 +58,11 @@ export function VideoTitleEdit({
     }
   }
 
+  const titleLinkClass =
+    variant === "card"
+      ? "min-w-0 max-w-full text-sm font-semibold text-gray-900 hover:text-blue-600 hover:underline"
+      : "min-w-0 max-w-full font-medium text-foreground hover:text-blue-600 hover:underline dark:hover:text-blue-400";
+
   if (!editing) {
     return (
       <div className="flex flex-wrap items-center gap-2">
@@ -62,13 +70,19 @@ export function VideoTitleEdit({
           <Link
             href={detailHref}
             prefetch
-            className="min-w-0 max-w-full font-medium text-foreground hover:text-blue-600 hover:underline dark:hover:text-blue-400"
+            className={titleLinkClass}
             onClick={(e) => e.stopPropagation()}
           >
             <span className="line-clamp-2 text-pretty">{initialTitle}</span>
           </Link>
         ) : (
-          <span className="font-medium text-zinc-900 dark:text-zinc-100">
+          <span
+            className={
+              variant === "card"
+                ? "text-sm font-semibold text-gray-900"
+                : "font-medium text-zinc-900 dark:text-zinc-100"
+            }
+          >
             {initialTitle}
           </span>
         )}
@@ -81,7 +95,11 @@ export function VideoTitleEdit({
             setEditing(true);
             setErr(null);
           }}
-          className="text-xs text-blue-600 underline dark:text-blue-400"
+          className={
+            variant === "card"
+              ? "text-[10px] text-blue-600 underline"
+              : "text-xs text-blue-600 underline dark:text-blue-400"
+          }
         >
           Düzenle
         </button>

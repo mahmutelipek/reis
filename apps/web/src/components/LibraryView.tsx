@@ -4,22 +4,29 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, type MouseEvent } from "react";
 import {
-  Archive,
   Bell,
+  Briefcase,
+  Calendar,
   ChevronDown,
-  Home,
+  CreditCard,
+  Disc,
+  Gift,
+  History,
   ImageIcon,
   Library,
+  LineChart,
   Link2,
   MonitorPlay,
   Search,
   Settings2,
-  Sparkles,
+  Star,
+  UserPlus,
   Users,
   Video,
   Eye,
   MessageCircle,
   Smile,
+  Clock,
 } from "lucide-react";
 import { LibraryUserMenu } from "@/components/LibraryUserMenu";
 import { RetranscribeButton } from "@/components/RetranscribeButton";
@@ -29,7 +36,6 @@ import { VideoTitleEdit } from "@/components/VideoTitleEdit";
 import { VideoArchiveButton } from "@/components/VideoArchiveButton";
 import { VideoShareMenu } from "@/components/VideoShareMenu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -38,7 +44,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -124,12 +129,12 @@ function VideoCardLoom({
   }
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm transition-shadow hover:shadow-md">
+    <article className="video-card-loom group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-gray-100 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_20px_-2px_rgba(0,0,0,0.1)]">
       {detailHref ? (
         <Link
           href={detailHref}
           prefetch
-          className="relative block aspect-video w-full cursor-pointer overflow-hidden rounded-t-xl bg-muted no-underline outline-offset-2 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring"
+          className="relative block aspect-video w-full cursor-pointer overflow-hidden bg-gray-100 no-underline outline-offset-2 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-blue-500"
           aria-label={`${v.title} — videoyu aç`}
         >
           {thumb ? (
@@ -141,58 +146,47 @@ function VideoCardLoom({
               className="h-full w-full select-none object-cover transition-transform duration-300 group-hover:scale-[1.02]"
             />
           ) : (
-            <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-slate-200/80 via-background to-violet-200/40 dark:from-slate-800/50 dark:to-violet-950/40">
-              <Video className="size-12 text-muted-foreground/50" />
-              <span className="text-xs font-medium text-muted-foreground">
+            <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-gray-100 to-gray-50">
+              <Video className="size-12 text-gray-300" />
+              <span className="text-xs font-medium text-gray-500">
                 {v.status === "uploading" ? "Yükleniyor / işleniyor" : v.status}
               </span>
             </div>
           )}
-          <Badge
-            variant="secondary"
-            className="pointer-events-none absolute right-2 bottom-2 border-0 bg-black/70 text-[11px] font-medium text-white"
-          >
+          <span className="pointer-events-none absolute right-2 bottom-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-bold text-white">
             {v.status === "ready" ? "Video" : "İşleniyor"}
-          </Badge>
+          </span>
         </Link>
       ) : (
-        <div className="relative aspect-video w-full overflow-hidden rounded-t-xl bg-muted">
-          <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+        <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
+          <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">
             Geçersiz paylaşım bağlantısı
           </div>
         </div>
       )}
 
-      {detailHref ? (
-        <div className="border-b border-border/60 px-3 py-2">
-          <Link
-            href={detailHref}
-            prefetch
-            className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 no-underline hover:underline dark:text-blue-400"
-          >
-            Videoyu aç
-            <span aria-hidden>→</span>
-          </Link>
-        </div>
-      ) : null}
-
       <div
-        className="cursor-pointer space-y-2 p-3"
+        className="cursor-pointer space-y-2 p-4"
         onClick={openVideoDetail}
       >
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex min-w-0 flex-1 items-center gap-2">
-            <Avatar size="sm" className="ring-1 ring-border">
+        <div className="mb-2 flex items-start justify-between gap-2">
+          <div className="flex min-w-0 flex-1 items-start gap-2">
+            <Avatar size="sm" className="size-6 shrink-0 ring-0">
               {userImageUrl ? (
                 <AvatarImage src={userImageUrl} alt="" />
               ) : null}
-              <AvatarFallback className="text-[10px]">
+              <AvatarFallback className="text-[9px]">
                 {initials(userDisplayName)}
               </AvatarFallback>
             </Avatar>
-            <span className="truncate text-xs font-medium text-foreground">
-              {userDisplayName}
-            </span>
+            <div className="min-w-0">
+              <p className="truncate text-xs font-semibold text-gray-900">
+                {userDisplayName}
+              </p>
+              <p className="text-[10px] text-gray-500">
+                {v.sharePasswordHash ? "Şifre korumalı" : "Herkese açık"}
+              </p>
+            </div>
           </div>
           <div
             className="flex shrink-0 items-center gap-1"
@@ -200,6 +194,9 @@ function VideoCardLoom({
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
           >
+            <span className="text-[10px] text-gray-400">
+              {relativeTimeTr(v.createdAt)}
+            </span>
             <VideoShareMenu
               shareSlug={v.shareSlug}
               appBaseUrl={appBaseUrl}
@@ -209,32 +206,30 @@ function VideoCardLoom({
           </div>
         </div>
 
-        <div className="min-w-0">
+        <div className="mb-4 min-w-0">
           <VideoTitleEdit
             videoId={v.id}
             initialTitle={v.title}
             detailHref={detailHref || undefined}
+            variant="card"
           />
         </div>
 
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+        <div className="flex items-center gap-4 text-[10px] text-gray-400">
           <span className="inline-flex items-center gap-1">
-            <Eye className="size-3.5" aria-hidden />
+            <Eye className="size-3" aria-hidden />
             {v.viewers}
           </span>
-          <span className="inline-flex items-center gap-1 opacity-50">
-            <MessageCircle className="size-3.5" aria-hidden />0
+          <span className="inline-flex items-center gap-1 opacity-70">
+            <MessageCircle className="size-3" aria-hidden />0
           </span>
-          <span className="inline-flex items-center gap-1 opacity-50">
-            <Smile className="size-3.5" aria-hidden />0
-          </span>
-          <span className="ml-auto text-[10px]">
-            {relativeTimeTr(v.createdAt)}
+          <span className="inline-flex items-center gap-1 opacity-70">
+            <Smile className="size-3" aria-hidden />0
           </span>
         </div>
 
         <div
-          className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-2"
+          className="flex flex-wrap items-center gap-2 border-t border-gray-100 pt-2"
           data-card-interactive
           onClick={(e) => e.stopPropagation()}
           onKeyDown={(e) => e.stopPropagation()}
@@ -248,18 +243,18 @@ function VideoCardLoom({
         </div>
 
         <details
-          className="group/details rounded-lg border border-dashed border-border/80 bg-muted/20 text-xs"
+          className="group/details rounded-lg border border-dashed border-gray-200 bg-gray-50/80 text-xs"
           data-card-interactive
           onClick={(e) => e.stopPropagation()}
           onKeyDown={(e) => e.stopPropagation()}
         >
-          <summary className="cursor-pointer list-none px-2 py-1.5 font-medium text-muted-foreground marker:hidden [&::-webkit-details-marker]:hidden">
+          <summary className="cursor-pointer list-none px-2 py-1.5 font-medium text-gray-500 marker:hidden [&::-webkit-details-marker]:hidden">
             <span className="inline-flex items-center gap-1">
               <Settings2 className="size-3.5" />
               Şifre, embed ve transcript
             </span>
           </summary>
-          <div className="space-y-3 border-t border-border/60 p-2">
+          <div className="space-y-3 border-t border-gray-100 p-2">
             {v.status === "ready" ? (
               <VideoSharePasswordSettings
                 videoId={v.id}
@@ -291,7 +286,7 @@ function VideoGrid({
 }) {
   if (items.length === 0) return null;
   return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {items.map((v) => (
         <VideoCardLoom
           key={v.id}
@@ -317,6 +312,7 @@ export function LibraryView({
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<"date" | "title">("date");
   const [sortOrder, setSortOrder] = useState<"new" | "old">("new");
+  const [mainTab, setMainTab] = useState("videos");
 
   const sortedActive = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -345,236 +341,294 @@ export function LibraryView({
       );
   }, [archivedVideos, search]);
 
-  const quotaPct = Math.min(
-    100,
-    Math.round((activeVideos.length / videoQuotaMax) * 100),
-  );
+  const tabCountLabel =
+    mainTab === "videos"
+      ? `${sortedActive.length} video`
+      : mainTab === "archive"
+        ? `${sortedArchived.length} video`
+        : "—";
+
+  const navInactive =
+    "flex items-center gap-3 rounded-lg p-2 text-sm text-gray-600 hover:bg-gray-100";
+  const navDisabled =
+    "flex cursor-not-allowed items-center gap-3 rounded-lg p-2 text-sm text-gray-400 opacity-60";
 
   return (
-    <div className="flex min-h-svh w-full bg-background">
-      {/* Sol şerit — Loom sidebar */}
-      <aside className="hidden w-[240px] shrink-0 flex-col border-r border-border bg-sidebar md:flex">
-        <div className="flex h-14 items-center gap-2 px-3">
-          <span className="font-heading text-lg font-bold tracking-tight text-sidebar-foreground">
-            Promptly
-          </span>
+    <div className="flex h-svh w-full overflow-hidden bg-white text-gray-800">
+      <aside className="hidden w-64 shrink-0 flex-col overflow-y-auto border-r border-gray-200 md:flex [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-200">
+        <div className="mb-4 flex items-center justify-between p-4">
+          <div className="flex items-center gap-2">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold text-white">
+              P
+            </div>
+            <span className="text-lg font-bold tracking-tight">Promptly</span>
+          </div>
+          <button
+            type="button"
+            className="text-gray-400 hover:text-gray-600"
+            aria-label="Kenar çubuğu (yakında)"
+            disabled
+          >
+            <span className="sr-only">Daralt</span>
+            <span className="text-lg" aria-hidden>
+              ≡
+            </span>
+          </button>
         </div>
-        <div className="px-2 pb-2">
+
+        <div className="mb-6 px-3">
           <DropdownMenu>
             <DropdownMenuTrigger
               nativeButton
-              className="flex w-full items-center justify-between rounded-lg border border-sidebar-border bg-sidebar px-2.5 py-2 text-left text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent/80"
+              className="flex w-full cursor-pointer items-center justify-between rounded-lg p-2 text-left hover:bg-gray-100"
             >
-              <span className="truncate">Çalışma alanı</span>
-              <ChevronDown className="size-4 shrink-0 opacity-60" />
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold text-gray-900">
+                  Çalışma alanı
+                </span>
+                <span className="text-xs text-gray-500">1 üye</span>
+              </div>
+              <ChevronDown className="size-3.5 shrink-0 text-gray-400" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-52">
               <DropdownMenuItem>Varsayılan alan</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <button
+            type="button"
+            className="mt-2 flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm text-gray-600 hover:bg-gray-100"
+            disabled
+          >
+            <UserPlus className="size-3.5 shrink-0" />
+            Ekip davet et
+          </button>
         </div>
 
-        <nav className="flex flex-col gap-0.5 px-2">
-          <Link
-            href="/"
-            className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
-          >
-            <Home className="size-4 shrink-0" />
-            Ana sayfa
-          </Link>
-          <div className="flex items-center gap-2 rounded-lg bg-sidebar-accent px-2.5 py-2 text-sm font-medium text-sidebar-accent-foreground">
-            <Library className="size-4 shrink-0" />
+        <nav className="flex flex-1 flex-col gap-1 px-3">
+          <div className={navDisabled}>
+            <Star className="size-5 shrink-0 opacity-70" />
+            Senin için
+          </div>
+          <div className="flex items-center gap-3 rounded-lg border-l-4 border-blue-600 bg-blue-50 p-2 text-sm font-medium text-blue-600">
+            <Library className="size-5 shrink-0" />
             Kütüphane
           </div>
-          <Link
-            href="/desktop/token"
-            className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
-          >
-            <Link2 className="size-4 shrink-0" />
-            Masaüstü yedek jeton
-          </Link>
-          <div className="flex cursor-not-allowed items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-muted-foreground opacity-50">
-            <MonitorPlay className="size-4 shrink-0" />
+          <div className={navDisabled}>
+            <Calendar className="size-5 shrink-0" />
             Toplantılar
           </div>
-          <div className="flex cursor-not-allowed items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-muted-foreground opacity-50">
-            <Video className="size-4 shrink-0" />
-            Son izlenenler
+          <div className={navDisabled}>
+            <Clock className="size-5 shrink-0" />
+            Sonra izle
           </div>
-        </nav>
+          <div className={navDisabled}>
+            <History className="size-5 shrink-0" />
+            Son açılanlar
+          </div>
+          <div className={navDisabled}>
+            <Gift className="size-5 shrink-0" />
+            Bonus
+          </div>
+          <Link href="/desktop/token" className={navInactive}>
+            <Link2 className="size-5 shrink-0" />
+            Masaüstü yedek
+          </Link>
+          <div className={navDisabled}>
+            <Settings2 className="size-5 shrink-0" />
+            Kişisel ayarlar
+          </div>
 
-        <Separator className="my-3" />
-        <p className="px-3 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
-          Yönetim
-        </p>
-        <nav className="mt-1 flex flex-col gap-0.5 px-2">
-          <div className="flex cursor-not-allowed items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-muted-foreground opacity-50">
-            <Settings2 className="size-4 shrink-0" />
-            Ayarlar
+          <div className="pt-6 pb-2">
+            <p className="px-2 text-xs font-semibold tracking-wider text-gray-400 uppercase">
+              Yönetim
+            </p>
           </div>
-          <div className="flex cursor-not-allowed items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-muted-foreground opacity-50">
-            <Users className="size-4 shrink-0" />
+          <div className={navDisabled}>
+            <LineChart className="size-5 shrink-0" />
+            Yönetim
+          </div>
+          <div className={navDisabled}>
+            <Users className="size-5 shrink-0" />
             Kullanıcılar
           </div>
+          <div className={navDisabled}>
+            <Briefcase className="size-5 shrink-0" />
+            Çalışma alanı
+          </div>
+          <div className={navDisabled}>
+            <CreditCard className="size-5 shrink-0" />
+            Faturalandırma
+          </div>
         </nav>
 
-        <div className="mt-auto space-y-3 border-t border-sidebar-border p-3">
-          <div className="rounded-lg border border-sidebar-border bg-sidebar-accent/40 p-3">
-            <p className="text-xs font-medium text-sidebar-foreground">
-              Ekibini davet et
-            </p>
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              Yakında: ortak kütüphane ve klasörler.
+        <div className="mt-auto space-y-4 p-4">
+          <div className="relative overflow-hidden rounded-xl border border-blue-100 bg-blue-50 p-4">
+            <p className="pr-6 text-sm font-semibold text-gray-800">
+              Ekibini davet et — ortak kütüphane yakında.
             </p>
             <Button
               size="sm"
-              className="mt-2 w-full bg-blue-600 text-white hover:bg-blue-700"
+              className="mt-3 w-full bg-blue-600 font-semibold text-white hover:bg-blue-700"
               disabled
             >
               Davet gönder
             </Button>
           </div>
           <Button
-            className="w-full bg-blue-600 text-white hover:bg-blue-700"
-            title="macOS Promptly uygulamasında kayıt başlatın"
+            className="h-12 w-full rounded-full bg-blue-600 font-bold text-white shadow-md hover:bg-blue-700"
             type="button"
             onClick={() =>
               window.alert(
-                "Kayıt: macOS Promptly uygulamasını açın (apps/desktop). Uygulamada «E-posta ile giriş yap» ile tarayıcıda bu hesapla giriş edin; jeton otomatik gelir. Gerekirse web’de «Masaüstü yedek jeton» ile elle kopyalayın. Videolar kütüphanede ve paylaşım detayında görünür.",
+                "Kayıt: macOS Promptly uygulamasını açın. «E-posta ile giriş yap» ile Clerk oturumu; gerekirse web’de Masaüstü yedek jeton.",
               )
             }
           >
-            <Sparkles className="mr-2 size-4" />
-            Kayıt al
+            <Disc className="mr-2 size-4" />
+            Video kaydet
           </Button>
         </div>
       </aside>
 
-      {/* Ana sütun */}
-      <div className="flex min-w-0 flex-1 flex-col">
-        {/* Üst bar — arama + kota + kullanıcı */}
-        <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-background px-4 lg:gap-4 lg:px-6">
-          <div className="relative min-w-0 flex-1 max-w-xl lg:mx-0">
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Kişi, başlık veya video ara…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-9 border-border bg-muted/40 pl-9 shadow-none md:bg-background"
-            />
-          </div>
-          <div className="hidden shrink-0 items-center gap-3 sm:flex">
-            <div className="flex flex-col items-end gap-0.5">
-              <span className="text-[11px] tabular-nums text-muted-foreground">
-                {activeVideos.length}/{videoQuotaMax} video
-              </span>
-              <div className="h-1 w-24 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full bg-blue-600 transition-all"
-                  style={{ width: `${quotaPct}%` }}
-                />
-              </div>
+      <main className="relative flex min-w-0 flex-1 flex-col bg-white">
+        <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-gray-100 px-4 sm:px-8">
+          <div className="min-w-0 flex-1 max-w-2xl">
+            <div className="relative">
+              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-gray-400" />
+              <Input
+                type="search"
+                placeholder="Kişi, başlık veya video ara…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-10 rounded-full border-gray-200 bg-white pl-10 shadow-none focus-visible:border-blue-500 focus-visible:ring-blue-500/30"
+              />
             </div>
-            <Button variant="outline" size="sm" className="hidden lg:inline-flex" disabled>
+          </div>
+          <div className="flex shrink-0 items-center gap-3 sm:gap-4">
+            <div className="hidden items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-500 sm:flex">
+              <span className="font-semibold text-blue-600">
+                {activeVideos.length}/{videoQuotaMax}
+              </span>
+              <span>video</span>
+            </div>
+            <Button
+              size="sm"
+              className="hidden font-bold text-white sm:inline-flex bg-blue-600 hover:bg-blue-700 lg:inline-flex"
+              disabled
+            >
               Yükselt
             </Button>
-            <Button variant="ghost" size="icon-sm" className="size-8" disabled aria-label="Bildirimler">
-              <Bell className="size-4" />
-            </Button>
-          </div>
-          <div className="shrink-0">
+            <button
+              type="button"
+              className="relative hidden text-gray-500 sm:block"
+              disabled
+              aria-label="Bildirimler"
+            >
+              <Bell className="size-5" />
+              <span className="absolute top-0 right-0 size-2 rounded-full border-2 border-white bg-red-500" />
+            </button>
             <LibraryUserMenu />
           </div>
         </header>
 
-        <div className="flex flex-1 flex-col px-4 py-6 lg:px-8">
-          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                Kütüphane
-              </p>
-              <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-8 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-200">
+          <div className="mb-8">
+            <span className="text-sm text-gray-500">Kütüphane</span>
+            <div className="mt-1 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+              <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">
                 Videolar
               </h1>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button variant="outline" size="sm" disabled>
-                Yeni klasör
-              </Button>
-              <DropdownMenu>
-                <div className="flex">
-                  <Button
-                    size="sm"
-                    className="rounded-r-none bg-blue-600 text-white hover:bg-blue-700"
-                    type="button"
-                    onClick={() =>
-                      window.alert(
-                        "macOS Promptly: «E-posta ile giriş yap» → tarayıcıda Clerk ile giriş → kayıt al. Yedek: /desktop/token.",
-                      )
-                    }
-                  >
-                    Yeni video
-                  </Button>
-                  <DropdownMenuTrigger
-                    nativeButton
-                    className="inline-flex size-8 items-center justify-center rounded-r-md border border-blue-700 bg-blue-600 text-white hover:bg-blue-700"
-                  >
-                    <ChevronDown className="size-4" />
-                  </DropdownMenuTrigger>
-                </div>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem
-                    onClick={() =>
-                      window.alert(
-                        "Masaüstü: swift build → PromptlyDesktop. Info.plist’e promptly URL şeması ekleyin. Sunucu PromptlyConfig’te.",
-                      )
-                    }
-                  >
-                    Masaüstü kurulumu
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-gray-200 font-semibold"
+                  disabled
+                >
+                  Yeni klasör
+                </Button>
+                <DropdownMenu>
+                  <div className="inline-flex rounded-lg shadow-sm">
+                    <Button
+                      size="sm"
+                      className="rounded-r-none border-r border-blue-500 bg-blue-600 font-semibold text-white hover:bg-blue-700"
+                      type="button"
+                      onClick={() =>
+                        window.alert(
+                          "macOS Promptly: «E-posta ile giriş yap» → kayıt al. Yedek: /desktop/token.",
+                        )
+                      }
+                    >
+                      Yeni video
+                    </Button>
+                    <DropdownMenuTrigger
+                      nativeButton
+                      className="inline-flex items-center justify-center rounded-r-lg bg-blue-600 px-2.5 text-white hover:bg-blue-700"
+                    >
+                      <ChevronDown className="size-4" />
+                    </DropdownMenuTrigger>
+                  </div>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem
+                      onClick={() =>
+                        window.alert(
+                          "Masaüstü: Xcode + promptly URL şeması. Sunucu PromptlyConfig.",
+                        )
+                      }
+                    >
+                      Masaüstü kurulumu
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </div>
 
-          <Tabs defaultValue="videos" className="flex flex-1 flex-col gap-0">
-            <TabsList variant="line" className="mb-0 h-auto w-full justify-start gap-6 border-b border-border bg-transparent p-0 pb-0">
-              <TabsTrigger
-                value="videos"
-                className="gap-1.5 rounded-none border-0 border-b-2 border-transparent bg-transparent px-0 pb-3 data-active:border-blue-600 data-active:bg-transparent data-active:shadow-none"
+          <Tabs
+            value={mainTab}
+            onValueChange={(v) => setMainTab(String(v))}
+            className="flex flex-1 flex-col gap-0"
+          >
+            <div className="mb-8 flex flex-col gap-3 border-b border-gray-200 sm:flex-row sm:items-center sm:justify-between">
+              <TabsList
+                variant="line"
+                className="h-auto w-full min-w-0 justify-start gap-8 rounded-none border-0 bg-transparent p-0"
               >
-                <Video className="size-4" />
-                Videolar
-              </TabsTrigger>
-              <TabsTrigger
-                value="screenshots"
-                className="gap-1.5 rounded-none border-0 border-b-2 border-transparent bg-transparent px-0 pb-3 data-active:border-blue-600 data-active:bg-transparent data-active:shadow-none"
-              >
-                <ImageIcon className="size-4" />
-                Ekran görüntüleri
-              </TabsTrigger>
-              <TabsTrigger
-                value="archive"
-                className="gap-1.5 rounded-none border-0 border-b-2 border-transparent bg-transparent px-0 pb-3 data-active:border-blue-600 data-active:bg-transparent data-active:shadow-none"
-              >
-                <Archive className="size-4" />
-                Arşiv
-              </TabsTrigger>
-            </TabsList>
+                <TabsTrigger
+                  value="videos"
+                  className="rounded-none border-0 border-b-2 border-transparent bg-transparent px-1 pb-4 text-sm font-medium text-gray-500 shadow-none hover:text-gray-700 data-active:border-blue-600 data-active:bg-transparent data-active:text-gray-900 data-active:shadow-none"
+                >
+                  Videolar
+                </TabsTrigger>
+                <TabsTrigger
+                  value="screenshots"
+                  className="rounded-none border-0 border-b-2 border-transparent bg-transparent px-1 pb-4 text-sm font-medium text-gray-500 shadow-none hover:text-gray-700 data-active:border-blue-600 data-active:bg-transparent data-active:text-gray-900 data-active:shadow-none"
+                >
+                  Ekran görüntüleri
+                </TabsTrigger>
+                <TabsTrigger
+                  value="archive"
+                  className="rounded-none border-0 border-b-2 border-transparent bg-transparent px-1 pb-4 text-sm font-medium text-gray-500 shadow-none hover:text-gray-700 data-active:border-blue-600 data-active:bg-transparent data-active:text-gray-900 data-active:shadow-none"
+                >
+                  Arşiv
+                </TabsTrigger>
+              </TabsList>
+              <div className="pb-2 text-xs font-medium text-gray-500 sm:pb-0">
+                {tabCountLabel}
+              </div>
+            </div>
 
-            <TabsContent value="videos" className="mt-0 flex-1 pt-5">
-              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm text-muted-foreground">
-                  <span className="font-medium text-foreground">Videolar</span>{" "}
-                  · {sortedActive.length} kayıt
-                </p>
-                <div className="flex flex-wrap items-center gap-2">
+            <TabsContent value="videos" className="mt-0 flex-1">
+              <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                <h2 className="text-lg font-bold text-gray-900">Videolar</h2>
+                <div className="flex flex-wrap gap-2">
                   <Select
                     value={sortBy}
                     onValueChange={(v) => setSortBy(v as "date" | "title")}
                   >
-                    <SelectTrigger size="sm" className="w-[140px]">
+                    <SelectTrigger
+                      size="sm"
+                      className="w-[150px] rounded-lg border-gray-200"
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -586,7 +640,10 @@ export function LibraryView({
                     value={sortOrder}
                     onValueChange={(v) => setSortOrder(v as "new" | "old")}
                   >
-                    <SelectTrigger size="sm" className="w-[160px]">
+                    <SelectTrigger
+                      size="sm"
+                      className="w-[170px] rounded-lg border-gray-200"
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -598,15 +655,14 @@ export function LibraryView({
               </div>
 
               {sortedActive.length === 0 ? (
-                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/20 px-6 py-20 text-center">
-                  <MonitorPlay className="mb-4 size-14 text-muted-foreground/40" />
-                  <p className="text-base font-semibold text-foreground">
+                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50/80 px-6 py-20 text-center">
+                  <MonitorPlay className="mb-4 size-14 text-gray-300" />
+                  <p className="text-base font-semibold text-gray-900">
                     Henüz video yok
                   </p>
-                  <p className="mt-2 max-w-md text-sm text-muted-foreground">
-                    Sol alttaki <strong>Kayıt al</strong> veya masaüstü uygulamasıyla
-                    ekran kaydı oluşturun; yükleme otomatik veya &quot;Son kaydı
-                    yükle&quot; ile gönderilir.
+                  <p className="mt-2 max-w-md text-sm text-gray-500">
+                    Soldan <strong>Video kaydet</strong> veya macOS uygulamasıyla
+                    kayıt oluşturun.
                   </p>
                 </div>
               ) : (
@@ -620,35 +676,51 @@ export function LibraryView({
               )}
             </TabsContent>
 
-            <TabsContent value="screenshots" className="mt-0 flex-1 pt-5">
-              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/20 px-6 py-20 text-center">
-                <ImageIcon className="mb-4 size-14 text-muted-foreground/40" />
-                <p className="text-base font-semibold">Ekran görüntüleri</p>
-                <p className="mt-2 max-w-md text-sm text-muted-foreground">
-                  Bu sekme Loom düzenine uygun hazır; yakında tek kare yakalama
-                  eklenecek.
+            <TabsContent value="screenshots" className="mt-0 flex-1">
+              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50/80 px-6 py-20 text-center">
+                <ImageIcon className="mb-4 size-14 text-gray-300" />
+                <p className="text-base font-semibold text-gray-900">
+                  Ekran görüntüleri
+                </p>
+                <p className="mt-2 max-w-md text-sm text-gray-500">
+                  Yakında tek kare yakalama.
                 </p>
               </div>
             </TabsContent>
 
-            <TabsContent value="archive" className="mt-0 flex-1 pt-5">
+            <TabsContent value="archive" className="mt-0 flex-1">
               {sortedArchived.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-border bg-muted/20 px-6 py-16 text-center text-sm text-muted-foreground">
-                  Arşiv boş. Videolar sekmesinden &quot;Arşivle&quot; ile taşıyın.
+                <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50/80 px-6 py-16 text-center text-sm text-gray-500">
+                  Arşiv boş. Videolar sekmesinden arşivleyin.
                 </div>
               ) : (
-                <VideoGrid
-                  items={sortedArchived}
-                  appBaseUrl={appBaseUrl}
-                  archived
-                  userDisplayName={userDisplayName}
-                  userImageUrl={userImageUrl}
-                />
+                <>
+                  <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                    <h2 className="text-lg font-bold text-gray-900">Arşiv</h2>
+                  </div>
+                  <VideoGrid
+                    items={sortedArchived}
+                    appBaseUrl={appBaseUrl}
+                    archived
+                    userDisplayName={userDisplayName}
+                    userImageUrl={userImageUrl}
+                  />
+                </>
               )}
             </TabsContent>
           </Tabs>
         </div>
-      </div>
+
+        <button
+          type="button"
+          className="fixed right-6 bottom-6 z-40 flex size-10 items-center justify-center rounded-lg border border-gray-200 bg-white shadow-lg hover:bg-gray-50"
+          title="Yardım"
+          aria-label="Yardım"
+        >
+          <span className="text-lg text-gray-600">?</span>
+        </button>
+      </main>
+
     </div>
   );
 }

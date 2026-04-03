@@ -1,5 +1,4 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { and, count, desc, eq, inArray, isNull, isNotNull } from "drizzle-orm";
 import {
@@ -47,10 +46,7 @@ export default async function LibraryPage() {
     return (
       <div className="mx-auto max-w-lg px-4 py-16">
         <p className="text-muted-foreground">
-          Clerk yapılandırılmadı.{" "}
-          <Link href="/" className="text-primary underline">
-            Ana sayfa
-          </Link>
+          Clerk yapılandırılmadı. Ortam değişkenlerini kontrol edin.
         </p>
       </div>
     );

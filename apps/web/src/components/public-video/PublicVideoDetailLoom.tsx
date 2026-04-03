@@ -98,7 +98,7 @@ export function PublicVideoDetailLoom({
             <PanelLeft className="size-[22px]" aria-hidden />
           </Link>
           <Link
-            href="/"
+            href="/library"
             className="flex min-w-0 cursor-pointer items-center gap-2"
           >
             <div className="flex size-[22px] shrink-0 items-center justify-center rounded bg-violet-700 text-white">

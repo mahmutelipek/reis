@@ -1,7 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { desktopHandoffs } from "@/lib/db/schema";
 import { isClerkConfigured } from "@/lib/clerk-config";
