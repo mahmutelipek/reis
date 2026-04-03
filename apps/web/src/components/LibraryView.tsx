@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import {
+  Archive,
   Bookmark,
   Calendar,
   ChevronsLeft,
@@ -144,7 +145,7 @@ function MvpEmptyCard({
 }: {
   icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
   title: string;
-  description: string;
+  description: React.ReactNode;
 }) {
   return (
     <Card className="border-dashed border-gray-200 shadow-none">
@@ -1023,18 +1024,19 @@ export function LibraryView({
               </div>
               <div className="px-4 pb-12 sm:px-8">
                 {sortedActive.length === 0 ? (
-                  <Card className="border-dashed border-gray-200 shadow-none">
-                    <CardContent className="flex flex-col items-center justify-center px-6 py-16 text-center">
-                      <MonitorPlay className="mb-4 size-14 text-gray-300" />
-                      <p className="text-base font-semibold text-gray-900">
-                        Henüz video yok
-                      </p>
-                      <p className="mt-2 max-w-md text-sm text-gray-500">
-                        Alttaki <strong>Video kaydet</strong> ile veya macOS
-                        uygulamasıyla kayıt oluştur.
-                      </p>
-                    </CardContent>
-                  </Card>
+                  <MvpEmptyCard
+                    icon={MonitorPlay}
+                    title="Henüz video yok"
+                    description={
+                      <>
+                        Kenar çubuğundaki{" "}
+                        <strong className="font-semibold text-foreground">
+                          Video kaydet
+                        </strong>{" "}
+                        ile veya macOS uygulamasıyla kayıt oluştur.
+                      </>
+                    }
+                  />
                 ) : (
                   <VideoGrid
                     items={sortedActive}
@@ -1050,28 +1052,22 @@ export function LibraryView({
 
           {mainTab === "screenshots" ? (
             <div className="px-4 pb-12 sm:px-8">
-              <Card className="border-dashed border-gray-200 shadow-none">
-                <CardContent className="flex flex-col items-center justify-center px-6 py-16 text-center">
-                  <ImageIcon className="mb-4 size-14 text-gray-300" />
-                  <p className="text-base font-semibold text-gray-900">
-                    Ekran görüntüleri
-                  </p>
-                  <p className="mt-2 max-w-md text-sm text-gray-500">
-                    Tek kare yakında eklenecek.
-                  </p>
-                </CardContent>
-              </Card>
+              <MvpEmptyCard
+                icon={ImageIcon}
+                title="Ekran görüntüleri"
+                description="Tek kare yakında eklenecek."
+              />
             </div>
           ) : null}
 
           {mainTab === "archive" ? (
             <div className="px-4 pb-12 sm:px-8">
               {sortedArchived.length === 0 ? (
-                <Card className="border-dashed border-gray-200 shadow-none">
-                  <CardContent className="px-6 py-14 text-center text-sm text-gray-500">
-                    Arşiv boş. Videolar sekmesinden arşivleyebilirsin.
-                  </CardContent>
-                </Card>
+                <MvpEmptyCard
+                  icon={Archive}
+                  title="Arşiv boş"
+                  description="Videolar sekmesinden videoları arşivleyebilirsin."
+                />
               ) : (
                 <>
                   <div className="mb-6 flex items-center justify-between py-4">
