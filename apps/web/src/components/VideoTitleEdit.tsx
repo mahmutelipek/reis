@@ -3,14 +3,15 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Pencil } from "lucide-react";
 
 type Props = {
   videoId: string;
   initialTitle: string;
   /** Paylaşım detay URL’si (örn. /v/abc); verilirse başlık tıklanabilir olur. */
   detailHref?: string;
-  /** Kütüphane (Loom) kartı: kompakt başlık */
-  variant?: "default" | "card";
+  /** Kütüphane kartı; `loom` = Loom’daki h3 + hover’da kalem */
+  variant?: "default" | "card" | "loom";
 };
 
 export function VideoTitleEdit({
@@ -59,11 +60,58 @@ export function VideoTitleEdit({
   }
 
   const titleLinkClass =
-    variant === "card"
-      ? "min-w-0 max-w-full text-sm font-bold text-gray-900 transition-colors group-hover:text-primary hover:text-primary hover:underline"
-      : "min-w-0 max-w-full font-medium text-foreground hover:text-primary hover:underline";
+    variant === "loom"
+      ? "min-w-0 flex-1 text-pretty text-sm leading-snug font-bold text-gray-900 transition-colors group-hover:text-primary hover:text-primary"
+      : variant === "card"
+        ? "min-w-0 max-w-full text-sm font-bold text-gray-900 transition-colors group-hover:text-primary hover:text-primary hover:underline"
+        : "min-w-0 max-w-full font-medium text-foreground hover:text-primary hover:underline";
 
   if (!editing) {
+    if (variant === "loom") {
+      return (
+        <div className="relative min-w-0 pr-7">
+          {detailHref ? (
+            <Link
+              href={detailHref}
+              prefetch
+              className={titleLinkClass}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <span className="line-clamp-2">{initialTitle}</span>
+            </Link>
+          ) : (
+            <span className="line-clamp-2 text-sm leading-snug font-bold text-gray-900">
+              {initialTitle}
+            </span>
+          )}
+          <button
+            type="button"
+            data-card-interactive
+            title="Başlığı düzenle"
+            aria-label="Başlığı düzenle"
+            onClick={(e) => {
+              e.stopPropagation();
+              setValue(initialTitle);
+              setEditing(true);
+              setErr(null);
+            }}
+            className="absolute top-0 right-0 rounded p-1 text-gray-500 opacity-0 transition-opacity hover:bg-gray-100 hover:text-gray-900 group-hover:opacity-100"
+          >
+            <Pencil className="size-3.5" strokeWidth={2} />
+          </button>
+          {err ? (
+            <span
+              className="mt-1 block text-xs text-red-500"
+              data-card-interactive
+              onClick={(e) => e.stopPropagation()}
+            >
+              {err}
+            </span>
+          ) : null}
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-wrap items-center gap-2">
         {detailHref ? (

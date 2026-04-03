@@ -23,6 +23,8 @@ type Props = {
   appBaseUrl: string;
   status: string;
   hasPassword: boolean;
+  /** Loom kartı: düz metin + küçük chevron, çerçevesiz tetikleyici */
+  variant?: "default" | "loom";
 };
 
 function buildShareUrl(base: string, slug: string) {
@@ -42,6 +44,7 @@ export function VideoShareMenu({
   appBaseUrl,
   status,
   hasPassword,
+  variant = "default",
 }: Props) {
   const [hint, setHint] = useState<string | null>(null);
   const shareUrl = buildShareUrl(appBaseUrl, shareSlug);
@@ -53,6 +56,12 @@ export function VideoShareMenu({
     : hasPassword
       ? "Şifre korumalı"
       : "Link ile paylaşılıyor";
+
+  const loomLabel = !ready
+    ? "Henüz paylaşılmıyor"
+    : hasPassword
+      ? "Şifre korumalı"
+      : "Paylaşılıyor";
 
   function flash(msg: string) {
     setHint(msg);
@@ -68,7 +77,18 @@ export function VideoShareMenu({
     }
   }
 
+  const loomTriggerClass =
+    "inline-flex max-w-full items-center gap-1 rounded-md border-0 bg-transparent p-0 text-left text-[11px] text-gray-500 shadow-none ring-0 outline-none transition-colors hover:bg-transparent hover:text-gray-700 focus-visible:ring-2 focus-visible:ring-primary/30";
+
   if (!ready) {
+    if (variant === "loom") {
+      return (
+        <div className="flex items-center gap-1 text-[11px] text-gray-500">
+          <span>{loomLabel}</span>
+          <ChevronDown className="size-3 shrink-0 opacity-60" strokeWidth={2} />
+        </div>
+      );
+    }
     return (
       <div className="flex flex-col items-end gap-0.5">
         <Button
@@ -83,6 +103,80 @@ export function VideoShareMenu({
         </Button>
         {hint ? (
           <span className="text-[10px] text-muted-foreground">{hint}</span>
+        ) : null}
+      </div>
+    );
+  }
+
+  if (variant === "loom") {
+    return (
+      <div className="flex flex-col items-start gap-0.5">
+        <DropdownMenu>
+          <DropdownMenuTrigger nativeButton className={loomTriggerClass}>
+            <span className="truncate">{loomLabel}</span>
+            <ChevronDown className="size-3 shrink-0 text-gray-400" strokeWidth={2} />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-56">
+            <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+              Paylaşım
+            </DropdownMenuLabel>
+            <DropdownMenuItem
+              onClick={() => copyText(shareUrl, "Link kopyalandı")}
+              className="gap-2"
+            >
+              <Link2 className="size-4" />
+              Paylaşım linkini kopyala
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() =>
+                window.open(shareUrl, "_blank", "noopener,noreferrer")
+              }
+              className="gap-2"
+            >
+              <ExternalLink className="size-4" />
+              Yeni sekmede aç
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              disabled={!embedCode}
+              onClick={() =>
+                embedCode
+                  ? copyText(embedCode, "Embed kodu kopyalandı")
+                  : undefined
+              }
+              className="gap-2"
+            >
+              <Code2 className="size-4" />
+              Embed kodunu kopyala
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={!embedCode}
+              onClick={() => {
+                const origin = appBaseUrl.replace(/\/$/, "");
+                if (origin) {
+                  void copyText(
+                    `${origin}/v/${shareSlug}/embed`,
+                    "Önizleme URL kopyalandı",
+                  );
+                }
+              }}
+              className="gap-2"
+            >
+              <Copy className="size-4" />
+              iframe src URL kopyala
+            </DropdownMenuItem>
+            {hasPassword ? (
+              <>
+                <DropdownMenuSeparator />
+                <p className="px-2 py-1.5 text-[11px] leading-snug text-muted-foreground">
+                  Şifre açık: izleyici önce şifre girer.
+                </p>
+              </>
+            ) : null}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {hint ? (
+          <span className="text-[10px] text-emerald-600">{hint}</span>
         ) : null}
       </div>
     );
