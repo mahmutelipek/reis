@@ -11,9 +11,11 @@ swift build -c release
 # Çalıştırılabilir: .build/release/PromptlyDesktop
 ```
 
+**Oturum:** Uygulamada **Tarayıcıda giriş yap** → web’de Clerk ile giriş/kayıt → **Bağlantıyı oluştur** → **Promptly uygulamasında aç** (`promptly://connect?token=…`). Sunucuda `DESKTOP_SESSION_SECRET` tanımlı olmalı (`apps/web/.env.example`). URL şeması için `Promptly-Info.plist.example` içeriğini Xcode hedefinde birleştir.
+
 İlk kayıtta macOS **Sistem Ayarları → Gizlilik ve Güvenlik → Ekran Kaydı** (ve gerekirse **Mikrofon**) için Promptly’ye izin ver.
 
 - **Kaydı başlat:** Ana pencerede uygulama pencereleri yakalamadan çıkarılır; istersen ayrı **Prompter** penceresini `⌘P` ile aç.
 - Çıktı dosyası: `Filmler` klasöründe `Promptly-*.mp4`.
 
-Xcode: `Package.swift` içeren bu klasörü açıp `PromptlyDesktop` scheme ile çalıştırın. Yayın öncesi `Promptly-Info.plist.example` içeriğini hedef `Info.plist` ile birleştirin (izin metinleri). Web’e yükleme: `POST /api/mux/upload` — Clerk JWT veya sunucu anahtarı; bkz. kök `README.md` ve `apps/web/.env.example`.
+Xcode: `Package.swift` içeren bu klasörü açıp `PromptlyDesktop` scheme ile çalıştırın. Yayın öncesi `Promptly-Info.plist.example` içeriğini hedef `Info.plist` ile birleştirin (izin metinleri + `promptly` URL şeması). Web’e yükleme: `POST /api/mux/upload` — tarayıcıdan alınan masaüstü oturum jetonu (Bearer) veya geliştirici anahtarı; bkz. kök `README.md` ve `apps/web/.env.example`.

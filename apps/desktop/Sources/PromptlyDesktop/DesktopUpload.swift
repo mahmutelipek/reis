@@ -13,7 +13,7 @@ enum DesktopUploadError: LocalizedError {
         case .invalidURL:
             return "Geçersiz API adresi."
         case .missingAuth:
-            return "Oturum jetonu veya (yedek) sunucu anahtarı gerekli."
+            return "Önce tarayıcıda /desktop/connect ile oturum aç veya (yedek) sunucu anahtarı kullan."
         case let .uploadFailed(err):
             return err?.localizedDescription ?? "Mux yükleme başarısız."
         }
@@ -80,7 +80,7 @@ enum DesktopUpload {
     private static let legacyKeyHeader = "x-promptly-desktop-key"
 
     /// 1) POST ile Mux PUT URL al 2) dosyayı PUT et (ilerleme isteğe bağlı).
-    /// `sessionToken`: Clerk JWT (elle yapıştırılabilir). `legacyDesktopKey`: DESKTOP_APIKEY yedeği.
+    /// `sessionToken`: Promptly masaüstü oturumu (Bearer). `legacyDesktopKey`: DESKTOP_APIKEY yedeği.
     static func uploadRecording(
         fileURL: URL,
         title: String,

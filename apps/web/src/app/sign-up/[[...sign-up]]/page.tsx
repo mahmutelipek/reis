@@ -12,10 +12,20 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export default function SignUpPage() {
+function safeInternalRedirect(raw: string | undefined): string | undefined {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return undefined;
+  return raw;
+}
+
+type Props = { searchParams: Promise<{ redirect_url?: string }> };
+
+export default async function SignUpPage({ searchParams }: Props) {
   if (!isClerkConfigured()) {
     redirect("/library");
   }
+
+  const sp = await searchParams;
+  const afterSign = safeInternalRedirect(sp.redirect_url) ?? "/library";
 
   return (
     <div className="flex min-h-svh flex-col items-center justify-center bg-muted/50 p-4">
@@ -30,8 +40,12 @@ export default function SignUpPage() {
           <SignUp
             routing="path"
             path="/sign-up"
-            signInUrl="/sign-in"
-            forceRedirectUrl="/library"
+            signInUrl={
+              afterSign !== "/library"
+                ? `/sign-in?redirect_url=${encodeURIComponent(afterSign)}`
+                : "/sign-in"
+            }
+            forceRedirectUrl={afterSign}
           />
           <Link
             href="/library"

@@ -63,7 +63,7 @@ open .build/debug/PromptlyDesktop
 
 Xcode ile açmak için `Package.swift` içeren klasörü açın.
 
-**Web’e yükleme:** macOS uygulaması `POST /api/mux/upload` çağırır (aynı doğrulama web oturumu, `Authorization: Bearer <Clerk JWT>` veya `x-promptly-desktop-key` + `DESKTOP_OWNER_CLERK_USER_ID`). Ayrıntılar `apps/web/.env.example`.
+**Web’e yükleme:** macOS uygulaması `POST /api/mux/upload` çağırır. Oturum: tarayıcıda `/desktop/connect` ile imzalı masaüstü jetonu (`DESKTOP_SESSION_SECRET`), isteğe bağlı Clerk JWT veya geliştirici `x-promptly-desktop-key` + `DESKTOP_OWNER_CLERK_USER_ID`. Ayrıntılar `apps/web/.env.example`.
 
 ## PRD
 

@@ -1,7 +1,7 @@
 import Combine
 import Foundation
 
-/// Sabit API kökü (PromptlyConfig) + Clerk JWT veya sunucu anahtarı (DESKTOP_APIKEY).
+/// Sabit API kökü (PromptlyConfig) + tarayıcıdan /desktop/connect ile alınan oturum jetonu veya DESKTOP_APIKEY.
 final class DesktopSettings: ObservableObject {
     private enum K {
         static let apiBaseOverride = "promptly.apiBaseOverride"
@@ -15,12 +15,12 @@ final class DesktopSettings: ObservableObject {
         didSet { UserDefaults.standard.set(apiBaseOverride, forKey: K.apiBaseOverride) }
     }
 
-    /// Bearer: Clerk oturum JWT (Clerk panosu / geliştirme araçlarından yapıştırılabilir).
+    /// Bearer: /desktop/connect ile üretilen Promptly masaüstü oturumu (pdtk1…).
     @Published var sessionToken: String {
         didSet { UserDefaults.standard.set(sessionToken, forKey: K.sessionToken) }
     }
 
-    /// İsteğe bağlı: sunucudaki `DESKTOP_APIKEY` (Clerk jetonu yoksa eski yöntem).
+    /// İsteğe bağlı: sunucudaki `DESKTOP_APIKEY` (geliştirici yedeği).
     @Published var legacyDesktopKey: String {
         didSet { UserDefaults.standard.set(legacyDesktopKey, forKey: K.legacyDesktopKey) }
     }
@@ -50,6 +50,27 @@ final class DesktopSettings: ObservableObject {
         let t = sessionToken.trimmingCharacters(in: .whitespacesAndNewlines)
         let l = legacyDesktopKey.trimmingCharacters(in: .whitespacesAndNewlines)
         return !t.isEmpty || !l.isEmpty
+    }
+
+    /// `promptly://connect?token=...` (Info.plist’te URL scheme kayıtlı olmalı).
+    func handleConnectURL(_ url: URL) {
+        guard url.scheme?.lowercased() == "promptly" else { return }
+        guard url.host?.lowercased() == "connect" else { return }
+        guard
+            let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems,
+            let token = items.first(where: { $0.name == "token" })?.value?.trimmingCharacters(in: .whitespacesAndNewlines),
+            !token.isEmpty
+        else { return }
+        sessionToken = token
+    }
+
+    func clearSession() {
+        sessionToken = ""
+    }
+
+    var browserConnectURL: URL? {
+        let base = resolvedAPIBase.trimmingCharacters(in: .whitespacesAndNewlines)
+        return URL(string: base + "/desktop/connect")
     }
 
 }

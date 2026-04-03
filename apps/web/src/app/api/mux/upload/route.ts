@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         error:
-          "Yetkisiz: Web’de oturum aç veya Bearer Clerk JWT / x-promptly-desktop-key (geliştirici) kullan.",
+          "Yetkisiz: Web’de oturum aç, masaüstü için /desktop/connect ile bağlan veya (geliştirici) x-promptly-desktop-key kullan.",
       },
       { status: 401 },
     );

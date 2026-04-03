@@ -1,4 +1,5 @@
 import { auth, verifyToken } from "@clerk/nextjs/server";
+import { verifyDesktopSessionToken } from "@/lib/desktop-session-token";
 
 const HEADER_LEGACY = "x-promptly-desktop-key";
 
@@ -15,8 +16,9 @@ function authorizedParties(): string[] | undefined {
 
 /**
  * 1) Tarayıcı Clerk oturumu (çerez)
- * 2) Authorization: Bearer &lt;Clerk JWT&gt; (ör. masaüstü istemci)
- * 3) x-promptly-desktop-key + DESKTOP_OWNER_CLERK_USER_ID (geliştirici yedeği)
+ * 2) Authorization: Bearer &lt;Clerk JWT&gt;
+ * 3) Authorization: Bearer &lt;Promptly masaüstü oturumu&gt; (/desktop/connect)
+ * 4) x-promptly-desktop-key + DESKTOP_OWNER_CLERK_USER_ID (geliştirici yedeği)
  */
 export async function resolveMuxUploadUserId(req: Request): Promise<string | null> {
   const { userId: cookieUser } = await auth();
@@ -27,6 +29,11 @@ export async function resolveMuxUploadUserId(req: Request): Promise<string | nul
     authz && /^Bearer\s+\S+/i.test(authz)
       ? authz.replace(/^Bearer\s+/i, "").trim()
       : null;
+
+  if (bearer) {
+    const desktopUser = verifyDesktopSessionToken(bearer);
+    if (desktopUser) return desktopUser;
+  }
 
   if (
     bearer &&

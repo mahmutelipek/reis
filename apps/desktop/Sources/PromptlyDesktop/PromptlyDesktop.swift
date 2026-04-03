@@ -11,6 +11,9 @@ struct PromptlyDesktopApp: App {
             ContentView()
                 .environmentObject(recorder)
                 .environmentObject(desktop)
+                .onOpenURL { url in
+                    desktop.handleConnectURL(url)
+                }
         }
         .defaultSize(width: 560, height: 480)
 
@@ -35,7 +38,7 @@ struct ContentView: View {
                 .font(.largeTitle.bold())
 
             Text(
-                "Kayıtlar web kütüphanesinde görünür. Yükleme için Clerk JWT’yi aşağıya yapıştır veya Gelişmiş’te sunucu anahtarını (DESKTOP_APIKEY) kullan. Web’de oturum açarak da aynı hesaba yükleyebilirsin (tarayıcı çerezi; uygulama ayrı)."
+                "Önce tarayıcıda giriş yapıp bu Mac’e bağla; sonra kayıtlar web kütüphanene yüklenir. URL şeması için Xcode’da Info.plist birleştirmesi gerekir (bkz. Promptly-Info.plist.example)."
             )
             .font(.callout)
             .foregroundStyle(.secondary)
@@ -52,14 +55,47 @@ struct ContentView: View {
                             .foregroundStyle(.secondary)
                     }
 
-                    SecureField("Clerk oturum JWT (Bearer)", text: $desktop.sessionToken)
-                        .textFieldStyle(.roundedBorder)
+                    HStack(alignment: .center, spacing: 10) {
+                        if desktop.sessionToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            Text("Oturum yok")
+                                .font(.callout)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Text("Bağlı")
+                                .font(.callout)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(.green)
+                        }
+                        Spacer(minLength: 8)
+                        Button("Tarayıcıda giriş yap…") {
+                            if let url = desktop.browserConnectURL {
+                                NSWorkspace.shared.open(url)
+                            }
+                        }
+                        .keyboardShortcut("l", modifiers: [.command])
+                        if !desktop.sessionToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            Button("Çıkış") {
+                                desktop.clearSession()
+                            }
+                        }
+                    }
+
+                    Button("Panodan bağlan (yedek)") {
+                        if let s = NSPasteboard.general.string(forType: .string)?
+                            .trimmingCharacters(in: .whitespacesAndNewlines),
+                           !s.isEmpty {
+                            desktop.sessionToken = s
+                        }
+                    }
+                    .font(.callout)
 
                     DisclosureGroup("Gelişmiş") {
                         VStack(alignment: .leading, spacing: 8) {
                             TextField("Özel API kökü (boşsa varsayılan)", text: $desktop.apiBaseOverride)
                                 .textFieldStyle(.roundedBorder)
-                            SecureField("Yedek: DESKTOP_APIKEY (Clerk yoksa)", text: $desktop.legacyDesktopKey)
+                            SecureField("Oturum jetonunu elle yapıştır (pdtk1…)", text: $desktop.sessionToken)
+                                .textFieldStyle(.roundedBorder)
+                            SecureField("Yedek: DESKTOP_APIKEY", text: $desktop.legacyDesktopKey)
                                 .textFieldStyle(.roundedBorder)
                         }
                         .padding(.top, 6)
