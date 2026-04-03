@@ -4,35 +4,20 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import {
-  Archive,
-  Bookmark,
-  Calendar,
   ChevronsLeft,
   ChevronsRight,
-  Clock,
-  FolderPlus,
   HelpCircle,
-  ImageIcon,
-  Library,
   Menu,
   MonitorPlay,
   Search,
-  User,
   Video,
-  Eye,
-  MessageCircle,
-  MoreHorizontal,
-  Smile,
   X,
 } from "lucide-react";
 import { LibraryNotificationsMenu } from "@/components/LibraryNotificationsMenu";
 import { LibraryUserMenu } from "@/components/LibraryUserMenu";
-import { VideoSharePasswordSettings } from "@/components/VideoSharePasswordSettings";
-import { EmbedSnippet } from "@/components/EmbedSnippet";
 import { VideoTitleEdit } from "@/components/VideoTitleEdit";
-import { VideoShareMenu } from "@/components/VideoShareMenu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -40,20 +25,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { formatDurationShort } from "@/lib/format-duration";
 
@@ -62,34 +34,19 @@ export type LibraryVideoItem = {
   title: string;
   status: string;
   shareSlug: string;
-  transcriptStatus: string | null;
-  sharePasswordHash: string | null;
   createdAt: string;
-  viewers: number;
-  commentCount: number;
-  reactionCount: number;
   durationSeconds: number | null;
   muxPlaybackId: string | null;
-  archivedAt: string | null;
 };
 
 type Props = {
-  activeVideos: LibraryVideoItem[];
-  archivedVideos: LibraryVideoItem[];
-  appBaseUrl: string;
+  videos: LibraryVideoItem[];
   userDisplayName: string;
   userImageUrl: string | null;
   videoQuotaMax?: number;
 };
 
 const SIDEBAR_STORAGE_KEY = "promptly.library.sidebarOpen";
-
-export type LibraryNavSection =
-  | "foryou"
-  | "library"
-  | "meetings"
-  | "watchlater"
-  | "recent";
 
 function InfoModal({
   open,
@@ -205,20 +162,14 @@ function PromptlyMark({ className }: { className?: string }) {
 
 function VideoCardLoom({
   v,
-  appBaseUrl,
-  archived,
   userDisplayName,
   userImageUrl,
 }: {
   v: LibraryVideoItem;
-  appBaseUrl: string;
-  archived: boolean;
   userDisplayName: string;
   userImageUrl: string | null;
 }) {
   const router = useRouter();
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [menuBusy, setMenuBusy] = useState(false);
 
   const thumb =
     v.muxPlaybackId && v.status === "ready"
@@ -235,36 +186,6 @@ function VideoCardLoom({
     if (!detailHref) return;
     e.preventDefault();
     router.push(detailHref);
-  }
-
-  async function toggleArchive() {
-    setMenuBusy(true);
-    try {
-      const res = await fetch(`/api/videos/${v.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ archived: !archived }),
-      });
-      if (!res.ok) {
-        const j = (await res.json()) as { error?: string };
-        throw new Error(j.error ?? res.statusText);
-      }
-      router.refresh();
-    } catch {
-      /* ignore */
-    } finally {
-      setMenuBusy(false);
-    }
-  }
-
-  async function runRetranscribe() {
-    setMenuBusy(true);
-    try {
-      await fetch(`/api/videos/${v.id}/transcribe`, { method: "POST" });
-      router.refresh();
-    } finally {
-      setMenuBusy(false);
-    }
   }
 
   return (
@@ -307,54 +228,9 @@ function VideoCardLoom({
       )}
 
       <div
-        className="relative flex min-h-0 flex-1 cursor-pointer flex-col p-4"
+        className="relative flex min-h-0 flex-1 cursor-pointer flex-col p-4 pb-5"
         onClick={openVideoDetail}
       >
-        <div
-          className="absolute top-3 right-3 z-10 opacity-0 transition-opacity group-hover:opacity-100"
-          data-card-interactive
-          onClick={(e) => e.stopPropagation()}
-          onKeyDown={(e) => e.stopPropagation()}
-        >
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              nativeButton
-              className={cn(
-                buttonVariants({ variant: "ghost", size: "icon" }),
-                "size-8 text-gray-500 hover:bg-gray-100 hover:text-gray-900",
-              )}
-              aria-label="Video seçenekleri"
-            >
-              <MoreHorizontal className="size-5" strokeWidth={1.5} />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuItem
-                disabled={menuBusy}
-                onClick={() => void toggleArchive()}
-              >
-                {archived ? "Arşivden çıkar" : "Arşivle"}
-              </DropdownMenuItem>
-              {v.status === "ready" &&
-              (v.transcriptStatus === "error" ||
-                v.transcriptStatus === "skipped") ? (
-                <DropdownMenuItem
-                  disabled={menuBusy}
-                  onClick={() => void runRetranscribe()}
-                >
-                  Transkripti yenile
-                </DropdownMenuItem>
-              ) : null}
-              <DropdownMenuItem
-                onClick={() => {
-                  setSettingsOpen(true);
-                }}
-              >
-                Şifre, embed ve transcript
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
         <div className="mb-3 flex items-start gap-3">
           <Avatar className="size-8 shrink-0 rounded-full ring-0">
             {userImageUrl ? (
@@ -364,31 +240,17 @@ function VideoCardLoom({
               {initials(userDisplayName)}
             </AvatarFallback>
           </Avatar>
-          <div
-            className="min-w-0 flex-1 pr-6"
-            data-card-interactive
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
-          >
+          <div className="min-w-0 flex-1">
             <div className="text-[13px] leading-tight font-semibold text-gray-900">
               {userDisplayName}
               <span className="ml-1 font-normal text-gray-500">
                 · {shortRelativeTr(v.createdAt)}
               </span>
             </div>
-            <div className="mt-0.5 flex items-center gap-1">
-              <VideoShareMenu
-                variant="loom"
-                shareSlug={v.shareSlug}
-                appBaseUrl={appBaseUrl}
-                status={v.status}
-                hasPassword={!!v.sharePasswordHash}
-              />
-            </div>
           </div>
         </div>
 
-        <div className="mb-4 min-w-0">
+        <div className="min-w-0" data-card-interactive onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
           <VideoTitleEdit
             videoId={v.id}
             initialTitle={v.title}
@@ -396,91 +258,17 @@ function VideoCardLoom({
             variant="loom"
           />
         </div>
-
-        <div className="mt-auto flex items-center gap-4 text-xs font-semibold text-gray-500">
-          <span className="inline-flex items-center gap-1.5 transition-colors hover:text-gray-900">
-            <Eye className="size-4 shrink-0" strokeWidth={2} aria-hidden />
-            {v.viewers}
-          </span>
-          <span className="inline-flex items-center gap-1.5 transition-colors hover:text-gray-900">
-            <MessageCircle
-              className="size-4 shrink-0"
-              strokeWidth={2}
-              aria-hidden
-            />
-            {v.commentCount}
-          </span>
-          <span className="inline-flex items-center gap-1.5 transition-colors hover:text-gray-900">
-            <Smile className="size-4 shrink-0" strokeWidth={2} aria-hidden />
-            {v.reactionCount}
-          </span>
-        </div>
       </div>
-
-      {settingsOpen ? (
-        <div
-          className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto bg-black/40 p-4 pt-16 sm:pt-24"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="video-settings-title"
-          data-card-interactive
-          onClick={() => setSettingsOpen(false)}
-        >
-          <div
-            className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-4 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
-          >
-            <div className="mb-4 flex items-center justify-between gap-2">
-              <h2
-                id="video-settings-title"
-                className="text-base font-semibold text-gray-900"
-              >
-                Şifre, embed ve transcript
-              </h2>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="size-8 shrink-0"
-                aria-label="Kapat"
-                onClick={() => setSettingsOpen(false)}
-              >
-                <X className="size-4" />
-              </Button>
-            </div>
-            <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-1">
-              {v.status === "ready" ? (
-                <VideoSharePasswordSettings
-                  videoId={v.id}
-                  hasPassword={!!v.sharePasswordHash}
-                />
-              ) : (
-                <p className="text-sm text-gray-500">
-                  Video hazır olunca şifre ve embed burada görünür.
-                </p>
-              )}
-              {v.status === "ready" ? (
-                <EmbedSnippet shareSlug={v.shareSlug} baseUrl={appBaseUrl} />
-              ) : null}
-            </div>
-          </div>
-        </div>
-      ) : null}
     </article>
   );
 }
 
 function VideoGrid({
   items,
-  appBaseUrl,
-  archived,
   userDisplayName,
   userImageUrl,
 }: {
   items: LibraryVideoItem[];
-  appBaseUrl: string;
-  archived: boolean;
   userDisplayName: string;
   userImageUrl: string | null;
 }) {
@@ -491,8 +279,6 @@ function VideoGrid({
         <VideoCardLoom
           key={v.id}
           v={v}
-          appBaseUrl={appBaseUrl}
-          archived={archived}
           userDisplayName={userDisplayName}
           userImageUrl={userImageUrl}
         />
@@ -501,88 +287,33 @@ function VideoGrid({
   );
 }
 
-function SideNavItem({
-  active,
-  onClick,
-  icon: Icon,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
-        active
-          ? "bg-primary/10 text-primary"
-          : "text-gray-700 hover:bg-gray-100",
-      )}
-    >
-      <Icon
-        className={cn(
-          "size-5 shrink-0",
-          active ? "text-primary" : "text-gray-500",
-        )}
-        strokeWidth={active ? 2 : 1.5}
-      />
-      {children}
-    </button>
-  );
-}
-
 type LibrarySidebarBodyProps = {
   onNavigate?: () => void;
   onRequestCollapse?: () => void;
   showCollapse?: boolean;
-  section: LibraryNavSection;
-  onSectionChange: (s: LibraryNavSection) => void;
   onOpenRecordHint: () => void;
-  onOpenFolderHint: () => void;
 };
 
 function LibrarySidebarBody({
   onNavigate,
   onRequestCollapse,
   showCollapse,
-  section,
-  onSectionChange,
   onOpenRecordHint,
-  onOpenFolderHint,
 }: LibrarySidebarBodyProps) {
-  function go(s: LibraryNavSection) {
-    onSectionChange(s);
-    onNavigate?.();
-  }
-
   return (
     <>
       <div className="flex h-16 shrink-0 items-center justify-between border-b border-gray-100 px-4">
-        <button
-          type="button"
-          onClick={() => go("library")}
-          className="flex min-w-0 cursor-pointer items-center gap-2 rounded-md text-left"
+        <Link
+          href="/library"
+          onClick={onNavigate}
+          className="flex min-w-0 cursor-pointer items-center gap-2 rounded-md text-left no-underline"
         >
           <PromptlyMark />
           <span className="truncate text-xl font-bold tracking-tight text-gray-900">
             Promptly
           </span>
-        </button>
+        </Link>
         <div className="flex shrink-0 items-center gap-0.5">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-8 text-gray-500 hover:bg-gray-100"
-            aria-label="Klasörler hakkında"
-            onClick={onOpenFolderHint}
-          >
-            <FolderPlus className="size-5" strokeWidth={1.5} />
-          </Button>
           {showCollapse && onRequestCollapse ? (
             <Button
               type="button"
@@ -599,51 +330,6 @@ function LibrarySidebarBody({
       </div>
 
       <div className="flex flex-1 flex-col overflow-y-auto pb-28 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-gray-300">
-        <div className="mx-3 mt-1 mb-4 rounded-xl border border-gray-200 bg-white px-3 py-2.5 shadow-sm">
-          <div className="text-sm font-semibold text-gray-900">
-            Çalışma alanı
-          </div>
-          <div className="text-xs text-gray-500">Varsayılan</div>
-        </div>
-
-        <nav className="flex flex-col gap-0.5 px-3" aria-label="Gezinme">
-          <SideNavItem
-            active={section === "foryou"}
-            onClick={() => go("foryou")}
-            icon={User}
-          >
-            Sana özel
-          </SideNavItem>
-          <SideNavItem
-            active={section === "library"}
-            onClick={() => go("library")}
-            icon={Library}
-          >
-            Kütüphane
-          </SideNavItem>
-          <SideNavItem
-            active={section === "meetings"}
-            onClick={() => go("meetings")}
-            icon={Calendar}
-          >
-            Toplantılar
-          </SideNavItem>
-          <SideNavItem
-            active={section === "watchlater"}
-            onClick={() => go("watchlater")}
-            icon={Bookmark}
-          >
-            Sonra izle
-          </SideNavItem>
-          <SideNavItem
-            active={section === "recent"}
-            onClick={() => go("recent")}
-            icon={Clock}
-          >
-            Son
-          </SideNavItem>
-        </nav>
-
         <div className="min-h-4 flex-1" />
       </div>
 
@@ -674,22 +360,16 @@ function LibrarySidebarBody({
   );
 }
 
-type InfoModalKind = "folder" | "record" | "newVideo" | "help" | null;
+type InfoModalKind = "record" | "help" | null;
 
 export function LibraryView({
-  activeVideos,
-  archivedVideos,
-  appBaseUrl,
+  videos,
   userDisplayName,
   userImageUrl,
   videoQuotaMax = 25,
 }: Props) {
-  const [section, setSection] = useState<LibraryNavSection>("library");
   const [infoModal, setInfoModal] = useState<InfoModalKind>(null);
   const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState<"date" | "title">("date");
-  const [sortOrder, setSortOrder] = useState<"new" | "old">("new");
-  const [mainTab, setMainTab] = useState("videos");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [isMd, setIsMd] = useState(true);
@@ -723,102 +403,47 @@ export function LibraryView({
     setMobileDrawerOpen((o) => !o);
   }
 
-  const sortedActive = useMemo(() => {
+  const sortedVideos = useMemo(() => {
     const q = search.trim().toLowerCase();
-    let list = activeVideos.filter((v) =>
-      q ? v.title.toLowerCase().includes(q) : true,
-    );
-    list = [...list].sort((a, b) => {
-      if (sortBy === "title") {
-        const c = a.title.localeCompare(b.title, "tr");
-        return sortOrder === "new" ? c : -c;
-      }
-      const ta = new Date(a.createdAt).getTime();
-      const tb = new Date(b.createdAt).getTime();
-      return sortOrder === "new" ? tb - ta : ta - tb;
-    });
-    return list;
-  }, [activeVideos, search, sortBy, sortOrder]);
-
-  const sortedArchived = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return [...archivedVideos]
+    return [...videos]
       .filter((v) => (q ? v.title.toLowerCase().includes(q) : true))
       .sort(
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       );
-  }, [archivedVideos, search]);
-
-  const sortedRecent = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const list = activeVideos
-      .filter((v) => (q ? v.title.toLowerCase().includes(q) : true))
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
-    return list.slice(0, 24);
-  }, [activeVideos, search]);
-
-  const tabCountLabel =
-    mainTab === "videos"
-      ? `${sortedActive.length} video`
-      : mainTab === "archive"
-        ? `${sortedArchived.length} video`
-        : "—";
-
-  const libraryPageTitle =
-    mainTab === "videos"
-      ? "Videolar"
-      : mainTab === "screenshots"
-        ? "Ekran görüntüleri"
-        : "Arşiv";
+  }, [videos, search]);
 
   const sidebarInner = (
     <LibrarySidebarBody
-      section={section}
-      onSectionChange={setSection}
       onNavigate={() => setMobileDrawerOpen(false)}
       showCollapse={isMd}
       onRequestCollapse={() => setSidebarOpen(false)}
       onOpenRecordHint={() => setInfoModal("record")}
-      onOpenFolderHint={() => setInfoModal("folder")}
     />
   );
 
   const infoModalContent =
-    infoModal === "folder"
+    infoModal === "record"
       ? {
-          title: "Klasörler",
+          title: "Video kaydet",
           body: (
             <p>
-              MVP sürümünde tüm videolar tek listede. Klasörler ileride
-              eklenecek.
+              Önce macOS Promptly uygulamasıyla kayıt al; videolar burada
+              listelenir. Paylaşım bağlantısı video sayfasından kopyalanır.
             </p>
           ),
         }
-      : infoModal === "record" || infoModal === "newVideo"
+      : infoModal === "help"
         ? {
-            title: "Video kaydet",
+            title: "Yardım",
             body: (
               <p>
-                Kayıt için macOS Promptly uygulamasını kullan. Web arayüzünden
-                yükleme şu an yok.
+                Kayıt: macOS uygulaması. Paylaşım: videoyu açıp bağlantıyı
+                kopyala.
               </p>
             ),
           }
-        : infoModal === "help"
-          ? {
-              title: "Yardım",
-              body: (
-                <p>
-                  Kayıt: macOS uygulaması. Paylaşım ve şifre: video kartındaki
-                  menü.
-                </p>
-              ),
-            }
-          : null;
+        : null;
 
   return (
     <div className="flex h-svh w-screen overflow-hidden bg-white font-sans text-gray-900 antialiased">
@@ -895,7 +520,7 @@ export function LibraryView({
               </div>
               <Input
                 type="search"
-                placeholder="Kişi, etiket, klasör veya video ara…"
+                placeholder="Video ara…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="h-10 w-full rounded-full border border-gray-300 bg-white pl-10 pr-4 text-sm shadow-none placeholder:text-gray-500 focus-visible:border-transparent focus-visible:ring-2 focus-visible:ring-primary"
@@ -905,7 +530,7 @@ export function LibraryView({
 
           <div className="flex shrink-0 items-center gap-3 pl-2 sm:gap-4 sm:pl-4">
             <div className="hidden rounded-full bg-primary/10 px-3.5 py-1.5 text-[13px] font-semibold text-primary sm:block">
-              {activeVideos.length}/{videoQuotaMax} video
+              {videos.length}/{videoQuotaMax} video
             </div>
             <LibraryNotificationsMenu />
             <LibraryUserMenu />
@@ -913,262 +538,45 @@ export function LibraryView({
         </header>
 
         <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-gray-300">
-          {section === "library" ? (
-            <>
-          <div className="px-4 pt-8 pb-4 sm:px-8">
-            <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-              <div>
-                <nav className="mb-1 flex items-center gap-2 text-sm font-medium text-gray-500">
-                  <span>Kütüphane</span>
-                </nav>
-                <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-[32px] sm:leading-none">
-                  {libraryPageTitle}
-                </h1>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-9 rounded-full border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50"
-                  onClick={() => setInfoModal("folder")}
-                >
-                  Yeni klasör
-                </Button>
-                <Button
-                  type="button"
-                  className="h-9 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
-                  onClick={() => setInfoModal("newVideo")}
-                >
-                  Yeni video
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3 border-b border-gray-200 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex gap-6">
-                <button
-                  type="button"
-                  onClick={() => setMainTab("videos")}
-                  className={cn(
-                    "-mb-px border-b-2 py-3 text-sm font-semibold transition-colors",
-                    mainTab === "videos"
-                      ? "border-primary text-gray-900"
-                      : "border-transparent text-gray-500 hover:text-gray-900",
-                  )}
-                >
-                  Videolar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMainTab("screenshots")}
-                  className={cn(
-                    "-mb-px border-b-2 py-3 text-sm font-semibold transition-colors",
-                    mainTab === "screenshots"
-                      ? "border-primary text-gray-900"
-                      : "border-transparent text-gray-500 hover:text-gray-900",
-                  )}
-                >
-                  Ekran görüntüleri
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMainTab("archive")}
-                  className={cn(
-                    "-mb-px border-b-2 py-3 text-sm font-semibold transition-colors",
-                    mainTab === "archive"
-                      ? "border-primary text-gray-900"
-                      : "border-transparent text-gray-500 hover:text-gray-900",
-                  )}
-                >
-                  Arşiv
-                </button>
-              </div>
-              <div className="pb-2 text-sm font-medium text-gray-500 sm:pb-0">
-                {tabCountLabel}
-              </div>
+          <div className="px-4 pt-8 pb-6 sm:px-8">
+            <nav className="mb-1 flex items-center gap-2 text-sm font-medium text-gray-500">
+              <span>Videolar</span>
+            </nav>
+            <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+              <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-[32px] sm:leading-none">
+                Kayıtlarım
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {sortedVideos.length} video
+                {search.trim() ? " (filtreli)" : ""}
+              </p>
             </div>
           </div>
 
-          {mainTab === "videos" ? (
-            <>
-              <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:px-8">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Videolar
-                </h2>
-                <div className="flex flex-wrap items-center gap-3">
-                  <Select
-                    value={sortBy}
-                    onValueChange={(v) => setSortBy(v as "date" | "title")}
-                  >
-                    <SelectTrigger className="h-9 w-[160px] rounded-lg border-gray-300 bg-white text-sm font-medium shadow-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="date">Yüklenme tarihi</SelectItem>
-                      <SelectItem value="title">Başlık</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select
-                    value={sortOrder}
-                    onValueChange={(v) => setSortOrder(v as "new" | "old")}
-                  >
-                    <SelectTrigger className="h-9 w-[180px] rounded-lg border-gray-300 bg-white text-sm font-medium shadow-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="new">Yeniden eskiye</SelectItem>
-                      <SelectItem value="old">Eskiden yeniye</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="px-4 pb-12 sm:px-8">
-                {sortedActive.length === 0 ? (
-                  <MvpEmptyCard
-                    icon={MonitorPlay}
-                    title="Henüz video yok"
-                    description={
-                      <>
-                        Kenar çubuğundaki{" "}
-                        <strong className="font-semibold text-foreground">
-                          Video kaydet
-                        </strong>{" "}
-                        ile veya macOS uygulamasıyla kayıt oluştur.
-                      </>
-                    }
-                  />
-                ) : (
-                  <VideoGrid
-                    items={sortedActive}
-                    appBaseUrl={appBaseUrl}
-                    archived={false}
-                    userDisplayName={userDisplayName}
-                    userImageUrl={userImageUrl}
-                  />
-                )}
-              </div>
-            </>
-          ) : null}
-
-          {mainTab === "screenshots" ? (
-            <div className="px-4 pb-12 sm:px-8">
+          <div className="px-4 pb-12 sm:px-8">
+            {sortedVideos.length === 0 ? (
               <MvpEmptyCard
-                icon={ImageIcon}
-                title="Ekran görüntüleri"
-                description="Tek kare yakında eklenecek."
+                icon={MonitorPlay}
+                title="Henüz video yok"
+                description={
+                  <>
+                    Kenar çubuğundaki{" "}
+                    <strong className="font-semibold text-foreground">
+                      Video kaydet
+                    </strong>{" "}
+                    ile macOS uygulamasından kayıt başlat; hazır olunca burada
+                    görünür.
+                  </>
+                }
               />
-            </div>
-          ) : null}
-
-          {mainTab === "archive" ? (
-            <div className="px-4 pb-12 sm:px-8">
-              {sortedArchived.length === 0 ? (
-                <MvpEmptyCard
-                  icon={Archive}
-                  title="Arşiv boş"
-                  description="Videolar sekmesinden videoları arşivleyebilirsin."
-                />
-              ) : (
-                <>
-                  <div className="mb-6 flex items-center justify-between py-4">
-                    <h2 className="text-lg font-semibold text-gray-900">
-                      Arşiv
-                    </h2>
-                  </div>
-                  <VideoGrid
-                    items={sortedArchived}
-                    appBaseUrl={appBaseUrl}
-                    archived
-                    userDisplayName={userDisplayName}
-                    userImageUrl={userImageUrl}
-                  />
-                </>
-              )}
-            </div>
-          ) : null}
-            </>
-          ) : null}
-
-          {section === "recent" ? (
-            <>
-              <div className="px-4 pt-8 pb-4 sm:px-8">
-                <nav className="mb-1 flex items-center gap-2 text-sm font-medium text-gray-500">
-                  <span>Son</span>
-                </nav>
-                <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-[32px] sm:leading-none">
-                  Son videolar
-                </h1>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  En yeni 24 kayıt. Arama kutusu bu listeyi filtreler.
-                </p>
-              </div>
-              <div className="px-4 pb-12 sm:px-8">
-                {sortedRecent.length === 0 ? (
-                  <MvpEmptyCard
-                    icon={Clock}
-                    title="Henüz kayıt yok"
-                    description="Kütüphanede video oluşturduğunda burada en yenileri görünür."
-                  />
-                ) : (
-                  <VideoGrid
-                    items={sortedRecent}
-                    appBaseUrl={appBaseUrl}
-                    archived={false}
-                    userDisplayName={userDisplayName}
-                    userImageUrl={userImageUrl}
-                  />
-                )}
-              </div>
-            </>
-          ) : null}
-
-          {section === "foryou" ? (
-            <div className="px-4 pt-8 pb-12 sm:px-8">
-              <nav className="mb-1 flex items-center gap-2 text-sm font-medium text-gray-500">
-                <span>Sana özel</span>
-              </nav>
-              <h1 className="mb-6 text-3xl font-bold tracking-tight text-gray-900 sm:text-[32px] sm:leading-none">
-                Sana özel
-              </h1>
-              <MvpEmptyCard
-                icon={User}
-                title="Öneriler yakında"
-                description="İzleme alışkanlıklarına göre öneriler bu alanda olacak. MVP’de sadece kütüphanen var."
+            ) : (
+              <VideoGrid
+                items={sortedVideos}
+                userDisplayName={userDisplayName}
+                userImageUrl={userImageUrl}
               />
-            </div>
-          ) : null}
-
-          {section === "meetings" ? (
-            <div className="px-4 pt-8 pb-12 sm:px-8">
-              <nav className="mb-1 flex items-center gap-2 text-sm font-medium text-gray-500">
-                <span>Toplantılar</span>
-              </nav>
-              <h1 className="mb-6 text-3xl font-bold tracking-tight text-gray-900 sm:text-[32px] sm:leading-none">
-                Toplantılar
-              </h1>
-              <MvpEmptyCard
-                icon={Calendar}
-                title="Toplantı kayıtları yok"
-                description="Takvim ve toplantı entegrasyonu sonraki sürümlerde. Şimdilik videoları kütüphaneden yönet."
-              />
-            </div>
-          ) : null}
-
-          {section === "watchlater" ? (
-            <div className="px-4 pt-8 pb-12 sm:px-8">
-              <nav className="mb-1 flex items-center gap-2 text-sm font-medium text-gray-500">
-                <span>Sonra izle</span>
-              </nav>
-              <h1 className="mb-6 text-3xl font-bold tracking-tight text-gray-900 sm:text-[32px] sm:leading-none">
-                Sonra izle
-              </h1>
-              <MvpEmptyCard
-                icon={Bookmark}
-                title="Liste boş"
-                description="Sonra izle listesi MVP kapsamında yok. Videoların hepsi kütüphanede."
-              />
-            </div>
-          ) : null}
+            )}
+          </div>
         </div>
 
         <Button

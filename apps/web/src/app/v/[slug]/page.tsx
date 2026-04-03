@@ -158,9 +158,6 @@ export default async function PublicVideoPage({ params }: Props) {
       uploaderImageUrl={uploader.imageUrl}
       uploaderFallback={authorInitials(uploader.name)}
       createdRel={createdRel}
-      transcriptStatus={video.transcriptStatus ?? "pending"}
-      transcriptText={video.transcriptText}
-      transcriptError={video.transcriptError}
     />
   );
 }

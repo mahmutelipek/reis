@@ -1,14 +1,6 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import {
-  and,
-  count,
-  desc,
-  eq,
-  inArray,
-  isNotNull,
-  isNull,
-} from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 import {
   LibraryView,
   type LibraryVideoItem,
@@ -22,48 +14,28 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getDb } from "@/lib/db";
-import {
-  videoComments,
-  videoReactions,
-  videos,
-  videoViews,
-} from "@/lib/db/schema";
+import { videos } from "@/lib/db/schema";
 import { isClerkConfigured } from "@/lib/clerk-config";
 
 export const dynamic = "force-dynamic";
 
-async function loadVideosForUser(userId: string, archived: boolean) {
-  const condition = archived
-    ? isNotNull(videos.archivedAt)
-    : isNull(videos.archivedAt);
-
+async function loadVideosForUser(userId: string) {
   return getDb()
     .select()
     .from(videos)
-    .where(and(eq(videos.userId, userId), condition))
+    .where(and(eq(videos.userId, userId), isNull(videos.archivedAt)))
     .orderBy(desc(videos.createdAt));
 }
 
-function toItems(
-  list: (typeof videos.$inferSelect)[],
-  viewersByVideo: Map<string, number>,
-  commentCountByVideo: Map<string, number>,
-  reactionCountByVideo: Map<string, number>,
-): LibraryVideoItem[] {
+function toItems(list: (typeof videos.$inferSelect)[]): LibraryVideoItem[] {
   return list.map((v) => ({
     id: v.id,
     title: v.title,
     status: v.status,
     shareSlug: v.shareSlug,
-    transcriptStatus: v.transcriptStatus ?? null,
-    sharePasswordHash: v.sharePasswordHash,
     createdAt: v.createdAt.toISOString(),
-    viewers: viewersByVideo.get(v.id) ?? 0,
-    commentCount: commentCountByVideo.get(v.id) ?? 0,
-    reactionCount: reactionCountByVideo.get(v.id) ?? 0,
     durationSeconds: v.durationSeconds ?? null,
     muxPlaybackId: v.muxPlaybackId,
-    archivedAt: v.archivedAt ? v.archivedAt.toISOString() : null,
   }));
 }
 
@@ -109,69 +81,11 @@ export default async function LibraryPage() {
   const userDisplayName = clerkDisplayName(user);
   const userImageUrl = user?.imageUrl ?? null;
 
-  const [activeList, archivedList] = await Promise.all([
-    loadVideosForUser(userId, false),
-    loadVideosForUser(userId, true),
-  ]);
-
-  const allIds = [...activeList, ...archivedList].map((v) => v.id);
-  const [viewCounts, commentCounts, reactionCounts] =
-    allIds.length === 0
-      ? [[], [], []]
-      : await Promise.all([
-          getDb()
-            .select({
-              videoId: videoViews.videoId,
-              viewers: count(videoViews.id),
-            })
-            .from(videoViews)
-            .where(inArray(videoViews.videoId, allIds))
-            .groupBy(videoViews.videoId),
-          getDb()
-            .select({
-              videoId: videoComments.videoId,
-              c: count(videoComments.id),
-            })
-            .from(videoComments)
-            .where(inArray(videoComments.videoId, allIds))
-            .groupBy(videoComments.videoId),
-          getDb()
-            .select({
-              videoId: videoReactions.videoId,
-              c: count(videoReactions.id),
-            })
-            .from(videoReactions)
-            .where(inArray(videoReactions.videoId, allIds))
-            .groupBy(videoReactions.videoId),
-        ]);
-
-  const viewersByVideo = new Map(
-    viewCounts.map((r) => [r.videoId, r.viewers]),
-  );
-  const commentCountByVideo = new Map(
-    commentCounts.map((r) => [r.videoId, r.c]),
-  );
-  const reactionCountByVideo = new Map(
-    reactionCounts.map((r) => [r.videoId, r.c]),
-  );
-
-  const appBaseUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() ?? "";
+  const list = await loadVideosForUser(userId);
 
   return (
     <LibraryView
-      activeVideos={toItems(
-        activeList,
-        viewersByVideo,
-        commentCountByVideo,
-        reactionCountByVideo,
-      )}
-      archivedVideos={toItems(
-        archivedList,
-        viewersByVideo,
-        commentCountByVideo,
-        reactionCountByVideo,
-      )}
-      appBaseUrl={appBaseUrl}
+      videos={toItems(list)}
       userDisplayName={userDisplayName}
       userImageUrl={userImageUrl}
     />

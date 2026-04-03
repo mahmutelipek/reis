@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 
 type Props = {
   /** Loom tarzı üst çubuk: Paylaş + bağlantı ikonu (ikisi de URL kopyalar) */
-  layout?: "default" | "loom-toolbar";
+  layout?: "default" | "loom-toolbar" | "loom-footer";
 };
 
 export function PublicShareCopyButton({ layout = "default" }: Props) {
@@ -59,6 +59,29 @@ export function PublicShareCopyButton({ layout = "default" }: Props) {
           )}
         </Button>
       </div>
+    );
+  }
+
+  if (layout === "loom-footer") {
+    return (
+      <Button
+        type="button"
+        variant="outline"
+        className="h-10 gap-2 rounded-full border-gray-300 bg-white px-4 text-[13px] font-semibold text-gray-800 shadow-sm hover:bg-gray-50"
+        onClick={() => void copy()}
+      >
+        {done ? (
+          <>
+            <Check className="size-4" aria-hidden />
+            Kopyalandı
+          </>
+        ) : (
+          <>
+            <Link2 className="size-4" aria-hidden />
+            Bağlantıyı kopyala
+          </>
+        )}
+      </Button>
     );
   }
 
