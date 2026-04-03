@@ -1,23 +1,34 @@
-import { auth } from "@clerk/nextjs/server";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { isClerkConfigured } from "@/lib/clerk-config";
-import { DesktopConnectClient } from "@/app/desktop/connect/DesktopConnectClient";
 
-export default async function DesktopConnectPage() {
+export const dynamic = "force-dynamic";
+import { DesktopConnectView } from "@/app/desktop/connect/DesktopConnectView";
+import { isClerkConfigured } from "@/lib/clerk-config";
+import {
+  Card,
+  CardContent,
+} from "@/components/ui/card";
+
+function Fallback() {
+  return (
+    <div className="flex min-h-svh flex-col items-center justify-center bg-muted/50 p-4">
+      <Card className="w-full max-w-md">
+        <CardContent className="p-10 text-center text-sm text-muted-foreground">
+          Yükleniyor…
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+export default function DesktopConnectPage() {
   if (!isClerkConfigured()) {
     redirect("/library");
   }
 
-  const { userId } = await auth();
-  if (!userId) {
-    redirect(
-      "/sign-in?redirect_url=" + encodeURIComponent("/desktop/connect"),
-    );
-  }
-
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center bg-muted/50 p-4">
-      <DesktopConnectClient />
-    </div>
+    <Suspense fallback={<Fallback />}>
+      <DesktopConnectView />
+    </Suspense>
   );
 }

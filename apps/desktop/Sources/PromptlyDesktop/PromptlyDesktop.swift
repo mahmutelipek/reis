@@ -37,11 +37,21 @@ struct ContentView: View {
             Text("Promptly")
                 .font(.largeTitle.bold())
 
-            Text(
-                "Önce tarayıcıda giriş yapıp bu Mac’e bağla; sonra kayıtlar web kütüphanene yüklenir. URL şeması için Xcode’da Info.plist birleştirmesi gerekir (bkz. Promptly-Info.plist.example)."
-            )
-            .font(.callout)
-            .foregroundStyle(.secondary)
+            Group {
+                if PromptlyConfig.looksLikePlaceholder {
+                    Text(
+                        "Web adresi ayarlı değil: `apps/desktop/PromptlyConfig.swift` içindeki embeddedFallbackRoot’u Vercel kökünle değiştir, ya da `apps/desktop/.promptly-api-base` dosyasına tek satır URL yazıp `./run.sh` ile çalıştır (veya `export PROMPTLY_API_BASE=...`)."
+                    )
+                    .font(.callout)
+                    .foregroundStyle(.orange)
+                } else {
+                    Text(
+                        "«Tarayıcıda giriş yap» web’de Clerk ile giriş/kayıt sayfasını açar; bağlantıyı oluşturup panodan veya uygulama bağlantısıyla bu Mac’e aktar. Kayıtlar aynı hesabın kütüphanesine yüklenir."
+                    )
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                }
+            }
             .fixedSize(horizontal: false, vertical: true)
 
             GroupBox("Hesap ve yükleme") {

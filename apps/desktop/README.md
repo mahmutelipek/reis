@@ -7,11 +7,22 @@ Swift Package Manager ile oluşturulmuş minimal masaüstü kabuğu. Üretimde:
 - Sparkle + Developer ID imzalı DMG dağıtımı (bkz. kök README / PRD)
 
 ```bash
+# Önerilen: Vercel kökünü tek satır yaz (`.promptly-api-base.example` → `.promptly-api-base`)
+./run.sh
+
+# veya doğrudan (URL’yi kendin ver):
+export PROMPTLY_API_BASE=https://senin-uygulaman.vercel.app
+swift run PromptlyDesktop
+```
+
+```bash
 swift build -c release
 # Çalıştırılabilir: .build/release/PromptlyDesktop
 ```
 
-**Oturum:** Uygulamada **Tarayıcıda giriş yap** → web’de Clerk ile giriş/kayıt → **Bağlantıyı oluştur** → **Promptly uygulamasında aç** (`promptly://connect?token=…`). Sunucuda `DESKTOP_SESSION_SECRET` tanımlı olmalı (`apps/web/.env.example`). URL şeması için `Promptly-Info.plist.example` içeriğini Xcode hedefinde birleştir.
+**Web kökü sırası:** `PROMPTLY_API_BASE` ortam değişkeni → `apps/desktop/.promptly-api-base` (yalnızca `./run.sh` ile) → `PromptlyConfig.swift` içindeki `embeddedFallbackRoot` (Xcode yoksa burayı mutlaka düzenle). Yerel Next için: `export PROMPTLY_API_BASE=http://127.0.0.1:3000`.
+
+**Oturum:** Uygulamada **Tarayıcıda giriş yap** → `/desktop/connect` (Clerk giriş/kayıt, kütüphane ile aynı kart düzeni) → **Bağlantıyı oluştur** → uygulamada aç veya pano. Sunucuda `DESKTOP_SESSION_SECRET` gerekli (`apps/web/.env.example`). `promptly://` için `Promptly-Info.plist.example` + Xcode; yoksa pano yeterli.
 
 İlk kayıtta macOS **Sistem Ayarları → Gizlilik ve Güvenlik → Ekran Kaydı** (ve gerekirse **Mikrofon**) için Promptly’ye izin ver.
 

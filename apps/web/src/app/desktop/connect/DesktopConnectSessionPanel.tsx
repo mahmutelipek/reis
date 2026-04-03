@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export function DesktopConnectClient() {
+export function DesktopConnectSessionPanel() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deepLink, setDeepLink] = useState<string | null>(null);
@@ -25,8 +25,7 @@ export function DesktopConnectClient() {
       const res = await fetch("/api/desktop/session", { method: "POST" });
       const data = (await res.json()) as { token?: string; error?: string };
       if (res.status === 401) {
-        window.location.href =
-          "/sign-in?redirect_url=" + encodeURIComponent("/desktop/connect");
+        window.location.href = "/desktop/connect";
         return;
       }
       if (!res.ok) {
@@ -60,36 +59,45 @@ export function DesktopConnectClient() {
 
   return (
     <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle>Masaüstü uygulamasını bağla</CardTitle>
+      <CardHeader className="text-center">
+        <CardTitle>Masaüstünü bağla</CardTitle>
         <CardDescription>
-          Oturumun açık. Aşağıdan oturum anahtarını oluşturup Promptly macOS
-          uygulamasına gönder.
+          macOS uygulamasına tek seferlik oturum anahtarı gönder. Tarayıcıda
+          zaten giriş yaptın.
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+      <CardContent className="flex flex-col items-center gap-4">
         {!deepLink ? (
-          <Button type="button" disabled={busy} onClick={() => void createSession()}>
+          <Button
+            type="button"
+            disabled={busy}
+            onClick={() => void createSession()}
+            className="w-full"
+          >
             {busy ? "Hazırlanıyor…" : "Bağlantıyı oluştur"}
           </Button>
         ) : (
           <>
-            <p className="text-sm text-muted-foreground">
-              Açılan bağlantı Promptly uygulamasını otomatik bağlar. İlk seferde
-              macOS onay isteyebilir.
+            <p className="text-center text-sm text-muted-foreground">
+              Önce uygulamada açmayı dene; olmazsa jetonu kopyalayıp uygulamada
+              «Panodan bağlan» kullan.
             </p>
             <a
               href={deepLink}
-              className={cn(buttonVariants({ variant: "default" }), "inline-flex w-full")}
+              className={cn(
+                buttonVariants({ variant: "default" }),
+                "inline-flex w-full",
+              )}
             >
               Promptly uygulamasında aç
             </a>
             <Button
               type="button"
               variant="outline"
+              className="w-full"
               onClick={() => void copyTokenFromLink()}
             >
-              Jetonu panoya kopyala (yedek)
+              Jetonu panoya kopyala
             </Button>
             <Button
               type="button"
@@ -105,27 +113,20 @@ export function DesktopConnectClient() {
           </>
         )}
         {error ? (
-          <p className="text-sm text-destructive" role="alert">
+          <p className="text-center text-sm text-destructive" role="alert">
             {error}
           </p>
         ) : null}
 
-        <p className="text-center text-xs text-muted-foreground">
-          Hesabın yok mu?{" "}
-          <Link
-            href="/sign-up?redirect_url=%2Fdesktop%2Fconnect"
-            className="font-medium text-primary underline-offset-2 hover:underline"
-          >
-            Kayıt ol
-          </Link>
-          {" · "}
-          <Link
-            href="/library"
-            className="underline-offset-2 hover:underline"
-          >
-            Kütüphane
-          </Link>
-        </p>
+        <Link
+          href="/library"
+          className={cn(
+            buttonVariants({ variant: "ghost", size: "sm" }),
+            "text-muted-foreground",
+          )}
+        >
+          Kütüphaneye dön
+        </Link>
       </CardContent>
     </Card>
   );

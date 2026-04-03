@@ -10,3 +10,4 @@ dist
 .swiftpm
 .build
 DerivedData
+apps/desktop/.promptly-api-base
