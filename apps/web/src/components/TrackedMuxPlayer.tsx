@@ -2,11 +2,15 @@
 
 import MuxPlayer from "@mux/mux-player-react";
 import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
+import { cn } from "@/lib/utils";
 
 type Props = {
   shareSlug: string;
   playbackId: string;
   title: string;
+  /** Mux kontrol vurgu rengi */
+  accentColor?: string;
+  className?: string;
 };
 
 const STORAGE_PREFIX = "promptly_view_session:";
@@ -49,7 +53,13 @@ async function reportView(
   }
 }
 
-export function TrackedMuxPlayer({ shareSlug, playbackId, title }: Props) {
+export function TrackedMuxPlayer({
+  shareSlug,
+  playbackId,
+  title,
+  accentColor = "rgb(59 130 246)",
+  className,
+}: Props) {
   const sessionId = useViewSessionId(shareSlug);
   const lastSentRef = useRef(0);
   const lastBeatRef = useRef(0);
@@ -90,8 +100,11 @@ export function TrackedMuxPlayer({ shareSlug, playbackId, title }: Props) {
     <MuxPlayer
       playbackId={playbackId}
       metadataVideoTitle={title}
-      accentColor="rgb(59 130 246)"
-      className="aspect-video w-full overflow-hidden rounded-lg bg-black"
+      accentColor={accentColor}
+      className={cn(
+        "aspect-video w-full overflow-hidden rounded-lg bg-black",
+        className,
+      )}
       onTimeUpdate={onTimeUpdate}
     />
   );

@@ -3,6 +3,7 @@ import Foundation
 enum DesktopUploadError: LocalizedError {
     case badResponse(Int, String)
     case invalidURL
+    case missingAuth
     case uploadFailed(Error?)
 
     var errorDescription: String? {
@@ -11,6 +12,8 @@ enum DesktopUploadError: LocalizedError {
             return "Sunucu \(code): \(body.prefix(200))"
         case .invalidURL:
             return "Geçersiz API adresi."
+        case .missingAuth:
+            return "Oturum jetonu veya (yedek) sunucu anahtarı gerekli."
         case let .uploadFailed(err):
             return err?.localizedDescription ?? "Mux yükleme başarısız."
         }
@@ -74,14 +77,16 @@ private final class MuxPutUploader: NSObject, URLSessionTaskDelegate {
 }
 
 enum DesktopUpload {
-    private static let keyHeader = "x-promptly-desktop-key"
+    private static let legacyKeyHeader = "x-promptly-desktop-key"
 
-    /// 1) POST ile Mux PUT URL al 2) dosyayı PUT et (ilerleme isteğe bağlı)
+    /// 1) POST ile Mux PUT URL al 2) dosyayı PUT et (ilerleme isteğe bağlı).
+    /// `sessionToken`: web `/desktop/token` Clerk JWT. `legacyDesktopKey`: opsiyonel sunucu anahtarı (yedek).
     static func uploadRecording(
         fileURL: URL,
         title: String,
         apiBase: String,
-        apiKey: String,
+        sessionToken: String,
+        legacyDesktopKey: String? = nil,
         onProgress: ((Double) -> Void)? = nil
     ) async throws -> MuxUploadInitResponse {
         let trimmed = apiBase.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -95,7 +100,17 @@ enum DesktopUpload {
         var create = URLRequest(url: endpoint)
         create.httpMethod = "POST"
         create.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        create.setValue(apiKey.trimmingCharacters(in: .whitespacesAndNewlines), forHTTPHeaderField: keyHeader)
+        let token = sessionToken.trimmingCharacters(in: .whitespacesAndNewlines)
+        let legacy = legacyDesktopKey?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if token.isEmpty && legacy.isEmpty {
+            throw DesktopUploadError.missingAuth
+        }
+        if !token.isEmpty {
+            create.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        if !legacy.isEmpty {
+            create.setValue(legacy, forHTTPHeaderField: legacyKeyHeader)
+        }
 
         let body: [String: String] = ["title": title]
         create.httpBody = try JSONEncoder().encode(body)

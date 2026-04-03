@@ -36,18 +36,42 @@ struct ContentView: View {
                 .font(.largeTitle.bold())
 
             Text(
-                "Kayıt sırasında bu işlemin tüm pencereleri yakalamadan çıkarılır. Web ile paylaşım için aşağıdaki API bilgilerini doldur (sunucuda `DESKTOP_APIKEY` ve `DESKTOP_OWNER_CLERK_USER_ID`)."
+                "Kayıtlar web’deki kütüphanende ve /v/… paylaşım sayfasında görünür. Aynı Clerk hesabı (e-posta) için tarayıcıda oturum jetonu alıp buraya yapıştırırsın; API kökü uygulamada sabittir (gerekirse Gelişmiş’ten değiştirirsin)."
             )
             .font(.callout)
             .foregroundStyle(.secondary)
             .fixedSize(horizontal: false, vertical: true)
 
-            GroupBox("Web bağlantısı (sonradan da girilebilir)") {
-                VStack(alignment: .leading, spacing: 8) {
-                    TextField("API kökü (örn. http://localhost:3000)", text: $desktop.apiBase)
+            GroupBox("Hesap ve yükleme") {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text("Sunucu")
+                            .frame(width: 88, alignment: .leading)
+                        Text(desktop.resolvedAPIBase)
+                            .font(.callout)
+                            .textSelection(.enabled)
+                            .foregroundStyle(.secondary)
+                    }
+                    Button("Jeton sayfasını tarayıcıda aç") {
+                        if let url = desktop.desktopTokenPageURL {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }
+                    .disabled(desktop.desktopTokenPageURL == nil)
+
+                    SecureField("Oturum jetonu (web → Masaüstü jetonu)", text: $desktop.sessionToken)
                         .textFieldStyle(.roundedBorder)
-                    SecureField("Desktop API anahtarı", text: $desktop.apiKey)
-                        .textFieldStyle(.roundedBorder)
+
+                    DisclosureGroup("Gelişmiş") {
+                        VStack(alignment: .leading, spacing: 8) {
+                            TextField("Özel API kökü (boşsa varsayılan)", text: $desktop.apiBaseOverride)
+                                .textFieldStyle(.roundedBorder)
+                            SecureField("Yedek: DESKTOP_APIKEY (sadece jeton yoksa)", text: $desktop.legacyDesktopKey)
+                                .textFieldStyle(.roundedBorder)
+                        }
+                        .padding(.top, 6)
+                    }
+
                     Toggle("Kayıt bitince otomatik yükle", isOn: $desktop.autoUploadAfterRecording)
                 }
                 .padding(4)
@@ -130,14 +154,14 @@ struct ContentView: View {
             let r = try await DesktopUpload.uploadRecording(
                 fileURL: file,
                 title: title,
-                apiBase: desktop.apiBase,
-                apiKey: desktop.apiKey,
+                apiBase: desktop.resolvedAPIBase,
+                sessionToken: desktop.sessionToken,
+                legacyDesktopKey: desktop.legacyDesktopKey.isEmpty ? nil : desktop.legacyDesktopKey,
                 onProgress: { p in
                     uploadProgress = p
                 }
             )
-            let base = desktop.apiBase.trimmingCharacters(in: .whitespacesAndNewlines)
-                .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            let base = desktop.resolvedAPIBase
             uploadLog = "Tamam: \(base)/v/\(r.shareSlug)\nMux işlemesi (oynatılabilir hale gelmesi) birkaç dakika sürebilir."
         } catch {
             uploadLog = error.localizedDescription

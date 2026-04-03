@@ -2,18 +2,11 @@ import type { Metadata } from "next";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Eye, Loader2 } from "lucide-react";
-import { PublicShareCopyButton } from "@/components/PublicShareCopyButton";
+import { Loader2 } from "lucide-react";
+import { PublicVideoDetailLoom } from "@/components/public-video/PublicVideoDetailLoom";
 import { RouterRefreshInterval } from "@/components/RouterRefreshInterval";
 import { SharePasswordGate } from "@/components/SharePasswordGate";
-import { TrackedMuxPlayer } from "@/components/TrackedMuxPlayer";
 import { VideoMuxSyncButton } from "@/components/VideoMuxSyncButton";
-import { VideoTranscript } from "@/components/VideoTranscript";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
 import { getUploaderDisplay } from "@/lib/clerk-uploader-display";
 import { resolvePublicVideo } from "@/lib/public-video-access";
 import { formatRelativeTimeTr } from "@/lib/relative-time-tr";
@@ -156,62 +149,18 @@ export default async function PublicVideoPage({ params }: Props) {
   const createdRel = formatRelativeTimeTr(video.createdAt.toISOString());
 
   return (
-    <div className="min-h-svh bg-zinc-950 text-zinc-50">
-      <div className="mx-auto max-w-6xl px-4 py-8 lg:py-10">
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex min-w-0 flex-1 items-start gap-3">
-            <Avatar size="lg" className="size-11 shrink-0">
-              {uploader.imageUrl ? (
-                <AvatarImage
-                  src={uploader.imageUrl}
-                  alt=""
-                  className="object-cover"
-                />
-              ) : null}
-              <AvatarFallback className="bg-zinc-800 text-zinc-200">
-                {authorInitials(uploader.name)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-zinc-100">
-                {uploader.name}
-              </p>
-              <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-zinc-500">
-                <span>{createdRel}</span>
-                <span className="text-zinc-600" aria-hidden>
-                  ·
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <Eye className="size-3.5 text-zinc-500" aria-hidden />
-                  {viewCount} görüntüleme
-                </span>
-              </p>
-            </div>
-          </div>
-          <PublicShareCopyButton />
-        </div>
-
-        <div className="grid gap-8 lg:grid-cols-[1fr_minmax(280px,340px)] lg:items-start">
-          <div className="min-w-0 space-y-4">
-            <h1 className="text-pretty text-xl font-semibold tracking-tight sm:text-2xl">
-              {video.title}
-            </h1>
-            <TrackedMuxPlayer
-              shareSlug={slug}
-              playbackId={video.muxPlaybackId!}
-              title={video.title}
-            />
-          </div>
-          <aside className="min-w-0 lg:pt-1">
-            <VideoTranscript
-              variant="sidebar"
-              status={video.transcriptStatus ?? "pending"}
-              text={video.transcriptText}
-              error={video.transcriptError}
-            />
-          </aside>
-        </div>
-      </div>
-    </div>
+    <PublicVideoDetailLoom
+      shareSlug={slug}
+      playbackId={video.muxPlaybackId!}
+      title={video.title}
+      viewCount={viewCount}
+      uploaderName={uploader.name}
+      uploaderImageUrl={uploader.imageUrl}
+      uploaderFallback={authorInitials(uploader.name)}
+      createdRel={createdRel}
+      transcriptStatus={video.transcriptStatus ?? "pending"}
+      transcriptText={video.transcriptText}
+      transcriptError={video.transcriptError}
+    />
   );
 }

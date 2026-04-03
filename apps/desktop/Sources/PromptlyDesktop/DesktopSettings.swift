@@ -1,20 +1,28 @@
 import Combine
 import Foundation
 
-/// Web uç noktası + masaüstü anahtarı — `UserDefaults` ile saklanır (bağlantıyı sen tamamlarsın).
+/// Sabit API kökü (PromptlyConfig) + Clerk oturum jetonu (web’de /desktop/token ile aynı hesap / e-posta).
 final class DesktopSettings: ObservableObject {
     private enum K {
-        static let apiBase = "promptly.apiBase"
-        static let apiKey = "promptly.apiKey"
+        static let apiBaseOverride = "promptly.apiBaseOverride"
+        static let sessionToken = "promptly.sessionToken"
+        static let legacyDesktopKey = "promptly.legacyDesktopKey"
         static let autoUpload = "promptly.autoUpload"
     }
 
-    @Published var apiBase: String {
-        didSet { UserDefaults.standard.set(apiBase, forKey: K.apiBase) }
+    /// Çoğu kurulumda boş: `PromptlyConfig.defaultAPIBase` kullanılır. Sadece özel sunucu için doldur.
+    @Published var apiBaseOverride: String {
+        didSet { UserDefaults.standard.set(apiBaseOverride, forKey: K.apiBaseOverride) }
     }
 
-    @Published var apiKey: String {
-        didSet { UserDefaults.standard.set(apiKey, forKey: K.apiKey) }
+    /// Web’de giriş yaptığın hesapla aynı kullanıcıya yüklemek için: /desktop/token
+    @Published var sessionToken: String {
+        didSet { UserDefaults.standard.set(sessionToken, forKey: K.sessionToken) }
+    }
+
+    /// İsteğe bağlı: sunucudaki `DESKTOP_APIKEY` (Clerk jetonu yoksa eski yöntem).
+    @Published var legacyDesktopKey: String {
+        didSet { UserDefaults.standard.set(legacyDesktopKey, forKey: K.legacyDesktopKey) }
     }
 
     @Published var autoUploadAfterRecording: Bool {
@@ -22,14 +30,29 @@ final class DesktopSettings: ObservableObject {
     }
 
     init() {
-        let base = UserDefaults.standard.string(forKey: K.apiBase) ?? "http://localhost:3000"
-        apiBase = base.trimmingCharacters(in: .whitespacesAndNewlines)
-        apiKey = UserDefaults.standard.string(forKey: K.apiKey) ?? ""
+        apiBaseOverride =
+            UserDefaults.standard.string(forKey: K.apiBaseOverride) ?? ""
+        sessionToken = UserDefaults.standard.string(forKey: K.sessionToken) ?? ""
+        legacyDesktopKey =
+            UserDefaults.standard.string(forKey: K.legacyDesktopKey) ?? ""
         autoUploadAfterRecording = UserDefaults.standard.bool(forKey: K.autoUpload)
     }
 
+    /// Gerçek istek kökü: override doluysa o, değilse varsayılan paket URL’si.
+    var resolvedAPIBase: String {
+        let o = apiBaseOverride.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !o.isEmpty { return o.trimmingCharacters(in: CharacterSet(charactersIn: "/")) }
+        return PromptlyConfig.defaultAPIBase.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+    }
+
     var canUpload: Bool {
-        URL(string: apiBase.trimmingCharacters(in: .whitespacesAndNewlines)) != nil
-            && !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        guard URL(string: resolvedAPIBase) != nil else { return false }
+        let t = sessionToken.trimmingCharacters(in: .whitespacesAndNewlines)
+        let l = legacyDesktopKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !t.isEmpty || !l.isEmpty
+    }
+
+    var desktopTokenPageURL: URL? {
+        URL(string: resolvedAPIBase + "/desktop/token")
     }
 }

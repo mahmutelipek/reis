@@ -10,6 +10,7 @@ import {
   Home,
   ImageIcon,
   Library,
+  Link2,
   MonitorPlay,
   Search,
   Settings2,
@@ -385,6 +386,13 @@ export function LibraryView({
             <Library className="size-4 shrink-0" />
             Kütüphane
           </div>
+          <Link
+            href="/desktop/token"
+            className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
+          >
+            <Link2 className="size-4 shrink-0" />
+            Masaüstü jetonu
+          </Link>
           <div className="flex cursor-not-allowed items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-muted-foreground opacity-50">
             <MonitorPlay className="size-4 shrink-0" />
             Toplantılar
@@ -432,7 +440,7 @@ export function LibraryView({
             type="button"
             onClick={() =>
               window.alert(
-                "Kayıt: Promptly masaüstü uygulamasını açın (apps/desktop). API kökü ve masaüstü anahtarını ayarlayıp ekran kaydı alın.",
+                "Kayıt: macOS Promptly uygulamasını açın (apps/desktop). Tarayıcıda bu hesapla giriş yapıp «Masaüstü jetonu»ndan jetonu kopyalayın; uygulamada yapıştırıp kayıt alın. Videolar kütüphanede ve paylaşım detayında görünür.",
               )
             }
           >
@@ -502,7 +510,7 @@ export function LibraryView({
                     type="button"
                     onClick={() =>
                       window.alert(
-                        "Kayıt için macOS Promptly masaüstü uygulamasını kullanın.",
+                        "macOS Promptly uygulaması: web’de oturum → Masaüstü jetonu → jetonu yapıştır → kayıt al.",
                       )
                     }
                   >
@@ -519,7 +527,7 @@ export function LibraryView({
                   <DropdownMenuItem
                     onClick={() =>
                       window.alert(
-                        "Masaüstü: swift build → PromptlyDesktop. API kökü + DESKTOP_APIKEY.",
+                        "Masaüstü: swift build → PromptlyDesktop. Varsayılan sunucu PromptlyConfig’te; jeton için /desktop/token.",
                       )
                     }
                   >
