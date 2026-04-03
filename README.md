@@ -47,7 +47,7 @@ cd apps/web && npm run db:push
 Repo: [github.com/mahmutelipek/reis](https://github.com/mahmutelipek/reis). Vercel’de **Add New Project** → bu repoyu içe aktar.
 
 - **Root Directory:** `apps/web` (monorepo; Next.js bu klasörde).
-- **Environment Variables:** `apps/web/.env.example` içindeki tüm anahtarları üretim değerleriyle ekle (`DATABASE_URL`, Clerk, Mux, `MUX_WEBHOOK_SECRET`, `SHARE_UNLOCK_SECRET`, `NEXT_PUBLIC_APP_URL`, `MUX_CORS_ORIGIN` = deploy kök URL’in, vb.).
+- **Environment Variables:** `apps/web/.env.example` içindeki anahtarları ekle. **Masaüstü bağlantı** (`/desktop/connect`) için `DESKTOP_SESSION_SECRET` şart (≥16 karakter rastgele; yerelde `openssl rand -hex 24`). Ayrıca `DATABASE_URL`, Clerk, Mux, `MUX_WEBHOOK_SECRET`, `SHARE_UNLOCK_SECRET`, `NEXT_PUBLIC_APP_URL`, `MUX_CORS_ORIGIN` = deploy kök URL’in, vb.
 - **Mux webhook URL** (ilk deploy’dan sonra): `https://<vercel-proje-url’n>/api/webhooks/mux` — Mux Dashboard’da webhook’u bu adrese güncelle; `MUX_WEBHOOK_SECRET`’i Vercel env’e yaz.
 - Şema: deploy sonrası bir kez `DATABASE_URL` ile `cd apps/web && npm run db:push` (lokalden veya CI) çalıştır.
 
