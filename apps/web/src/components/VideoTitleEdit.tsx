@@ -60,7 +60,7 @@ export function VideoTitleEdit({
 
   const titleLinkClass =
     variant === "card"
-      ? "min-w-0 max-w-full text-sm font-semibold text-gray-900 hover:text-primary hover:underline"
+      ? "min-w-0 max-w-full text-sm font-bold text-gray-900 transition-colors group-hover:text-primary hover:text-primary hover:underline"
       : "min-w-0 max-w-full font-medium text-foreground hover:text-primary hover:underline";
 
   if (!editing) {
