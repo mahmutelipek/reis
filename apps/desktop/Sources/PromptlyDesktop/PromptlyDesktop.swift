@@ -8,19 +8,26 @@ struct PromptlyDesktopApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environmentObject(recorder)
-                .environmentObject(desktop)
-                .onOpenURL { url in
-                    desktop.handleConnectURL(url)
-                }
+            NavigationStack {
+                ContentView()
+                    .navigationTitle("Promptly")
+            }
+            .environmentObject(recorder)
+            .environmentObject(desktop)
+            .onOpenURL { url in
+                desktop.handleConnectURL(url)
+            }
         }
-        .defaultSize(width: 560, height: 480)
+        .defaultSize(width: 720, height: 640)
+        .windowResizability(.contentSize)
 
         Window("Prompter", id: "prompter") {
-            PrompterPlaceholderView()
+            NavigationStack {
+                PrompterPlaceholderView()
+                    .navigationTitle("Prompter")
+            }
         }
-        .defaultSize(width: 380, height: 520)
+        .defaultSize(width: 400, height: 540)
     }
 }
 
@@ -32,141 +39,169 @@ struct ContentView: View {
     @State private var uploadLog: String = ""
     @State private var uploadBusy = false
     @State private var uploadProgress: Double?
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Promptly")
-                .font(.largeTitle.bold())
-
-            Group {
+        Form {
+            Section {
                 if PromptlyConfig.looksLikePlaceholder {
-                    Text(
-                        "Web adresi ayarlı değil: `apps/desktop/PromptlyConfig.swift` içindeki embeddedFallbackRoot’u Vercel kökünle değiştir, ya da `apps/desktop/.promptly-api-base` dosyasına tek satır URL yazıp `./run.sh` ile çalıştır (veya `export PROMPTLY_API_BASE=...`)."
-                    )
-                    .font(.callout)
-                    .foregroundStyle(.orange)
+                    Label {
+                        Text(
+                            "Sunucu adresi eksik: `PromptlyConfig.swift` veya `.promptly-api-base` / `PROMPTLY_API_BASE` ayarla."
+                        )
+                        .font(.subheadline)
+                        .foregroundStyle(.orange)
+                    } icon: {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                    }
                 } else {
-                    Text(
-                        "«Tarayıcıda giriş yap» web’de Clerk ile giriş/kayıt sayfasını açar; bağlantıyı oluşturup panodan veya uygulama bağlantısıyla bu Mac’e aktar. Kayıtlar aynı hesabın kütüphanesine yüklenir."
-                    )
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
+                    Label {
+                        Text(
+                            "Aşağıdan tarayıcıda giriş yap; bağlantıyı oluşturup bu uygulamaya aktar. Kayıtlar web kütüphanende."
+                        )
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    } icon: {
+                        Image(systemName: "link.circle.fill")
+                            .foregroundStyle(.blue.gradient)
+                            .symbolRenderingMode(.hierarchical)
+                    }
                 }
+            } header: {
+                Text("Özet")
             }
-            .fixedSize(horizontal: false, vertical: true)
 
-            GroupBox("Hesap ve yükleme") {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(alignment: .firstTextBaseline) {
-                        Text("Sunucu")
-                            .frame(width: 88, alignment: .leading)
-                        Text(desktop.resolvedAPIBase)
-                            .font(.callout)
-                            .textSelection(.enabled)
+            Section {
+                LabeledContent("Sunucu") {
+                    Text(desktop.resolvedAPIBase)
+                        .font(.body.monospaced())
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                        .multilineTextAlignment(.trailing)
+                        .lineLimit(3)
+                }
+
+                HStack {
+                    if desktop.sessionToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        Label("Oturum yok", systemImage: "person.crop.circle.badge.questionmark")
                             .foregroundStyle(.secondary)
+                    } else {
+                        Label("Bağlı", systemImage: "checkmark.seal.fill")
+                            .foregroundStyle(.green)
                     }
-
-                    HStack(alignment: .center, spacing: 10) {
-                        if desktop.sessionToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                            Text("Oturum yok")
-                                .font(.callout)
-                                .foregroundStyle(.secondary)
-                        } else {
-                            Text("Bağlı")
-                                .font(.callout)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(.green)
-                        }
-                        Spacer(minLength: 8)
-                        Button("Tarayıcıda giriş yap…") {
-                            if let url = desktop.browserConnectURL {
-                                NSWorkspace.shared.open(url)
-                            }
-                        }
-                        .keyboardShortcut("l", modifiers: [.command])
-                        if !desktop.sessionToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                            Button("Çıkış") {
-                                desktop.clearSession()
-                            }
+                    Spacer()
+                    Button("Tarayıcıda giriş yap…") {
+                        if let url = desktop.browserConnectURL {
+                            NSWorkspace.shared.open(url)
                         }
                     }
-
-                    Button("Panodan bağlan (yedek)") {
-                        if let s = NSPasteboard.general.string(forType: .string)?
-                            .trimmingCharacters(in: .whitespacesAndNewlines),
-                           !s.isEmpty {
-                            desktop.sessionToken = s
+                    .keyboardShortcut("l", modifiers: [.command])
+                    if !desktop.sessionToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        Button("Çıkış") {
+                            desktop.clearSession()
                         }
+                        .buttonStyle(.borderless)
                     }
-                    .font(.callout)
-
-                    DisclosureGroup("Gelişmiş") {
-                        VStack(alignment: .leading, spacing: 8) {
-                            TextField("Özel API kökü (boşsa varsayılan)", text: $desktop.apiBaseOverride)
-                                .textFieldStyle(.roundedBorder)
-                            SecureField("Oturum jetonunu elle yapıştır (pdtk1…)", text: $desktop.sessionToken)
-                                .textFieldStyle(.roundedBorder)
-                            SecureField("Yedek: DESKTOP_APIKEY", text: $desktop.legacyDesktopKey)
-                                .textFieldStyle(.roundedBorder)
-                        }
-                        .padding(.top, 6)
-                    }
-
-                    Toggle("Kayıt bitince otomatik yükle", isOn: $desktop.autoUploadAfterRecording)
                 }
-                .padding(4)
+
+                Button {
+                    if let s = NSPasteboard.general.string(forType: .string)?
+                        .trimmingCharacters(in: .whitespacesAndNewlines),
+                       !s.isEmpty {
+                        desktop.sessionToken = s
+                    }
+                } label: {
+                    Label("Panodan bağlan", systemImage: "doc.on.clipboard")
+                }
+            } header: {
+                Text("Hesap")
             }
 
-            HStack(spacing: 12) {
-                Button("Prompter penceresi") {
-                    openWindow(id: "prompter")
+            Section {
+                DisclosureGroup("Gelişmiş") {
+                    TextField("Özel API kökü", text: $desktop.apiBaseOverride)
+                    SecureField("Oturum jetonu (pdtk1…)", text: $desktop.sessionToken)
+                    SecureField("DESKTOP_APIKEY (yedek)", text: $desktop.legacyDesktopKey)
                 }
-                .keyboardShortcut("p", modifiers: [.command])
+                .padding(.top, 4)
+
+                Toggle("Kayıt bitince otomatik yükle", isOn: $desktop.autoUploadAfterRecording)
+            }
+
+            Section {
+                Button {
+                    openWindow(id: "prompter")
+                } label: {
+                    Label("Prompter penceresi", systemImage: "text.bubble")
+                }
 
                 if recorder.isRecording {
-                    Button("Durdur", role: .destructive) {
+                    Button(role: .destructive) {
                         recorder.stopRecording()
+                    } label: {
+                        Label("Kaydı durdur", systemImage: "stop.circle.fill")
                     }
                 } else {
-                    Button("Kaydı başlat") {
+                    Button {
                         recorder.startRecording()
+                    } label: {
+                        Label("Kaydı başlat", systemImage: "record.circle")
                     }
-                    .keyboardShortcut("r", modifiers: [.command])
+                    .buttonStyle(.borderedProminent)
+                    .tint(.red)
                 }
 
                 if let url = recorder.lastRecordingURL, !recorder.isRecording, desktop.canUpload {
-                    Button(
-                        uploadBusy
-                            ? (uploadProgress.map { String(format: "Yükleniyor… %d%%", Int($0 * 100)) } ?? "Yükleniyor…")
-                            : "Son kaydı yükle"
-                    ) {
+                    Button {
                         Task { await upload(url) }
+                    } label: {
+                        if uploadBusy {
+                            if let p = uploadProgress {
+                                Label(
+                                    "Yükleniyor… \(Int(p * 100))%",
+                                    systemImage: "arrow.up.circle"
+                                )
+                            } else {
+                                Label("Yükleniyor…", systemImage: "arrow.up.circle")
+                            }
+                        } else {
+                            Label("Son kaydı yükle", systemImage: "icloud.and.arrow.up")
+                        }
                     }
                     .disabled(uploadBusy)
                 }
-            }
 
-            Text(recorder.status)
-                .font(.footnote)
-                .foregroundStyle(recorder.status.contains("Hata") ? Color.red : Color.secondary)
-                .lineLimit(4)
-
-            if !uploadLog.isEmpty {
-                Text(uploadLog)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .textSelection(.enabled)
-            }
-
-            if let url = recorder.lastRecordingURL, !recorder.isRecording {
-                Button("Finder’da göster") {
-                    NSWorkspace.shared.activateFileViewerSelecting([url])
+                if let url = recorder.lastRecordingURL, !recorder.isRecording {
+                    Button {
+                        NSWorkspace.shared.activateFileViewerSelecting([url])
+                    } label: {
+                        Label("Finder’da göster", systemImage: "folder")
+                    }
                 }
+            } header: {
+                Text("Kayıt")
             }
 
-            Spacer()
+            Section {
+                Text(recorder.status)
+                    .font(.subheadline)
+                    .foregroundStyle(recorder.status.contains("Hata") ? Color.red : Color.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                if !uploadLog.isEmpty {
+                    Text(uploadLog)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            } header: {
+                Text("Durum")
+            }
         }
-        .padding(24)
-        .frame(minWidth: 520, minHeight: 460)
+        .formStyle(.grouped)
+        .frame(minWidth: 560, minHeight: 500)
+        .padding(.top, 8)
         .onChange(of: recorder.lastRecordingURL) { newURL in
             guard desktop.autoUploadAfterRecording,
                   desktop.canUpload,
@@ -183,7 +218,7 @@ struct ContentView: View {
         uploadProgress = nil
         let bytes = (try? FileManager.default.attributesOfItem(atPath: file.path)[.size] as? NSNumber)?.int64Value ?? 0
         let mb = Double(bytes) / 1_048_576
-        uploadLog = String(format: "Dosya ~%.1f MB — sunucuya gönderiliyor…", mb)
+        uploadLog = String(format: "Dosya ~%.1f MB — gönderiliyor…", mb)
         defer {
             uploadBusy = false
             uploadProgress = nil
@@ -201,7 +236,7 @@ struct ContentView: View {
                 }
             )
             let base = desktop.resolvedAPIBase
-            uploadLog = "Tamam: \(base)/v/\(r.shareSlug)\nMux işlemesi (oynatılabilir hale gelmesi) birkaç dakika sürebilir."
+            uploadLog = "Tamam: \(base)/v/\(r.shareSlug)\nMux işlemi birkaç dakika sürebilir."
         } catch {
             uploadLog = error.localizedDescription
         }

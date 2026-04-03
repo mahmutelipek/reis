@@ -58,15 +58,17 @@ export function DesktopConnectSessionPanel() {
   }, [deepLink]);
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader className="text-center">
-        <CardTitle>Masaüstünü bağla</CardTitle>
-        <CardDescription>
-          macOS uygulamasına tek seferlik oturum anahtarı gönder. Tarayıcıda
-          zaten giriş yaptın.
+    <Card className="w-full max-w-[420px] border-0 shadow-xl ring-1 ring-black/5 dark:ring-white/10">
+      <CardHeader className="space-y-1 pb-2 text-center">
+        <CardTitle className="text-xl font-semibold tracking-tight">
+          Masaüstünü bağla
+        </CardTitle>
+        <CardDescription className="text-[15px] leading-snug">
+          Bu Mac’e tek seferlik oturum anahtarı gönder. Uygulama açıkken aşağıdan
+          devam et.
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col items-center gap-4">
+      <CardContent className="flex flex-col items-center gap-4 px-6 pb-6">
         {!deepLink ? (
           <Button
             type="button"

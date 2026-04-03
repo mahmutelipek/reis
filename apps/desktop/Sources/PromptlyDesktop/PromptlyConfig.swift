@@ -5,10 +5,10 @@ import Foundation
 /// Öncelik:
 /// 1) Ortam değişkeni `PROMPTLY_API_BASE` (önerilir), örn. `export PROMPTLY_API_BASE=https://senin-uygulaman.vercel.app`
 /// 2) `apps/desktop/.promptly-api-base` dosyası — `./run.sh` otomatik okur
-/// 3) Aşağıdaki `embeddedFallbackRoot` — **kendi Vercel kökünle değiştir** (Xcode yoksa burası kritik)
+/// 3) `embeddedFallbackRoot` — varsayılan üretim Vercel kökü
 enum PromptlyConfig {
-    /// Xcode yokken burayı tek sefer düzenle: dağıtım kökün (örn. https://reis.vercel.app)
-    private static let embeddedFallbackRoot = "https://YOUR-APP.vercel.app"
+    /// Varsayılan web dağıtımı (Vercel)
+    private static let embeddedFallbackRoot = "https://reis-web-indol.vercel.app"
 
     static var defaultAPIBase: String {
         if let raw = ProcessInfo.processInfo.environment["PROMPTLY_API_BASE"]?

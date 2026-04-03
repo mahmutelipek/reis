@@ -5,15 +5,20 @@ struct PrompterPlaceholderView: View {
     @State private var script: String = "Kayıt öncesi script burada düzenlenecek…"
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Teleprompter (yer tutucu)")
-                .font(.headline)
-            TextEditor(text: $script)
-                .font(.system(.body, design: .monospaced))
-                .scrollContentBackground(.hidden)
-                .padding(8)
-                .background(Color(nsColor: .textBackgroundColor))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+        Form {
+            Section {
+                TextEditor(text: $script)
+                    .font(.system(.body, design: .monospaced))
+                    .frame(minHeight: 200)
+                    .scrollContentBackground(.hidden)
+            } header: {
+                Text("Metin")
+            } footer: {
+                Text("Kayıt öncesi script; ileride senkron prompter burada olacak.")
+                    .font(.caption)
+            }
         }
+        .formStyle(.grouped)
+        .padding()
     }
 }
