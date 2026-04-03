@@ -14,7 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-type Phase = "fetching" | "opening" | "fallback" | "fail";
+type Phase = "fetching" | "ready" | "fail";
 
 export function DesktopAutoConnectRedirect() {
   const [phase, setPhase] = useState<Phase>("fetching");
@@ -24,7 +24,6 @@ export function DesktopAutoConnectRedirect() {
 
   useEffect(() => {
     let cancelled = false;
-    let fallbackTimer: ReturnType<typeof setTimeout> | undefined;
 
     (async () => {
       try {
@@ -59,11 +58,12 @@ export function DesktopAutoConnectRedirect() {
         const q = new URLSearchParams({ token: data.token });
         const link = `promptly://connect?${q.toString()}`;
         setDeepLink(link);
-        setPhase("opening");
-        window.location.href = link;
-        fallbackTimer = setTimeout(() => {
-          if (!cancelled) setPhase("fallback");
-        }, 2000);
+        setPhase("ready");
+
+        // Çoğu tarayıcı bunu kullanıcı tıklaması olmadan engeller; yine de dene.
+        queueMicrotask(() => {
+          if (!cancelled) window.location.assign(link);
+        });
       } catch {
         if (!cancelled) {
           setError("Ağ hatası. Bağlantını kontrol et.");
@@ -74,11 +74,10 @@ export function DesktopAutoConnectRedirect() {
 
     return () => {
       cancelled = true;
-      if (fallbackTimer !== undefined) clearTimeout(fallbackTimer);
     };
   }, []);
 
-  if (phase === "fetching" || phase === "opening") {
+  if (phase === "fetching") {
     return (
       <Card className="w-full overflow-hidden border bg-card shadow-lg">
         <CardContent className="flex flex-col items-center gap-4 py-14">
@@ -87,16 +86,8 @@ export function DesktopAutoConnectRedirect() {
             aria-hidden
           />
           <p className="text-center text-sm font-medium text-foreground">
-            {phase === "fetching"
-              ? "Oturum hazırlanıyor…"
-              : "Promptly açılıyor…"}
+            Oturum hazırlanıyor…
           </p>
-          {phase === "opening" ? (
-            <p className="max-w-[280px] text-center text-xs text-muted-foreground">
-              Pencereyi kapatabilirsin. Uygulama açılmazsa birkaç saniye sonra burada
-              yedek bağlantı görünür.
-            </p>
-          ) : null}
         </CardContent>
       </Card>
     );
@@ -143,24 +134,34 @@ export function DesktopAutoConnectRedirect() {
     <Card className="w-full overflow-hidden border bg-card shadow-lg">
       <CardHeader className="space-y-1 border-b bg-muted/30 px-6 pb-4 pt-6 text-center">
         <CardTitle className="text-xl font-semibold tracking-tight">
-          Uygulamayı aç
+          Promptly’yi aç
         </CardTitle>
         <CardDescription className="text-[15px] leading-relaxed">
-          Tarayıcı uygulamayı açmana izin vermediyse aşağıdan Promptly’yi aç.
+          Tarayıcılar <code className="rounded bg-muted px-1 py-0.5 text-xs">promptly://</code>{" "}
+          bağlantısını çoğu zaman otomatik açmaz. Aşağıdaki büyük düğmeye mutlaka tıkla — Promptly
+          marka rengi, Mac uygulamasındaki ana kayıt düğmesiyle aynı. macOS “Promptly’yi aç” diye
+          soracak.
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col gap-3 px-6 py-6">
+      <CardContent className="flex flex-col gap-4 px-6 py-6">
         {deepLink ? (
           <a
             href={deepLink}
             className={cn(
               buttonVariants({ variant: "default", size: "lg" }),
-              "h-12 w-full rounded-xl text-base font-semibold shadow-sm",
+              "h-14 w-full rounded-xl text-base font-semibold shadow-sm",
             )}
           >
-            Promptly’de aç
+            Promptly uygulamasını aç
           </a>
         ) : null}
+        <p className="text-center text-xs text-muted-foreground leading-relaxed">
+          Uygulamayı <code className="rounded bg-muted px-1 py-0.5 text-[11px]">swift run</code> ile
+          çalıştırıyorsan güncel sürümde <code className="rounded bg-muted px-1 py-0.5 text-[11px]">promptly://</code>{" "}
+          binary içine gömülü; yine açılmazsa Xcode +{" "}
+          <code className="rounded bg-muted px-1 py-0.5 text-[11px]">Promptly-Info.plist.example</code>{" "}
+          kullan.
+        </p>
         <Separator />
         <Link
           href="/library"

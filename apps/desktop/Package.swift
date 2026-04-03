@@ -12,7 +12,14 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "PromptlyDesktop",
-            path: "Sources/PromptlyDesktop"
+            path: "Sources/PromptlyDesktop",
+            linkerSettings: [
+                // `swift run` çıktısına `promptly://` kaydı (LS tarafından tanınır).
+                .unsafeFlags([
+                    "-Xlinker", "-sectcreate", "-Xlinker", "__TEXT", "-Xlinker", "__info_plist", "-Xlinker",
+                    "EmbeddedInfo.plist",
+                ]),
+            ]
         ),
     ]
 )

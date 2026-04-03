@@ -18,8 +18,8 @@ struct DesktopConnectGateView: View {
                         .fill(
                             LinearGradient(
                                 colors: [
-                                    Color(red: 0.32, green: 0.52, blue: 1.0),
-                                    Color(red: 0.58, green: 0.36, blue: 0.98),
+                                    PromptlyBrand.primaryLight,
+                                    PromptlyBrand.primaryDark,
                                 ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
@@ -69,14 +69,14 @@ struct DesktopConnectGateView: View {
                                     .frame(width: 32, height: 32)
                                 Image(systemName: "arrow.right")
                                     .font(.system(size: 14, weight: .bold))
-                                    .foregroundStyle(Color(red: 0.2, green: 0.45, blue: 1.0))
+                                    .foregroundStyle(PromptlyBrand.primary)
                             }
                             Text("Giriş yap veya üye ol")
                                 .font(.body.weight(.semibold))
                         }
                         .frame(maxWidth: 320)
                         .padding(.vertical, 16)
-                        .background(Color(red: 0.22, green: 0.48, blue: 0.98))
+                        .background(PromptlyBrand.primary)
                         .foregroundStyle(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                         .shadow(color: .black.opacity(0.25), radius: 12, y: 6)

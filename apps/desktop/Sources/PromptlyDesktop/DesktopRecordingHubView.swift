@@ -236,7 +236,7 @@ struct DesktopRecordingHubView: View {
                     .background(
                         recorder.isRecording
                             ? Color.gray.opacity(0.55)
-                            : Color(red: 0.94, green: 0.33, blue: 0.18)
+                            : PromptlyBrand.primary
                     )
                     .foregroundStyle(.white)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
