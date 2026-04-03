@@ -18,7 +18,7 @@ export const clerkDesktopConnectAppearance: Appearance = {
     colorText: "hsl(var(--foreground))",
     colorTextSecondary: "hsl(var(--muted-foreground))",
     colorBackground: "transparent",
-    colorInputBackground: "hsl(var(--muted) / 0.45)",
+    colorInputBackground: "hsl(var(--muted) / 0.65)",
     colorInputText: "hsl(var(--foreground))",
     colorNeutral: "hsl(var(--border))",
   },

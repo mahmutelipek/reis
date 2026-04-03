@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useCallback, useState } from "react";
+import { DesktopConnectEnvHelp } from "@/app/desktop/connect/DesktopConnectEnvHelp";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import {
   Card,
@@ -15,11 +17,13 @@ import {
 export function DesktopConnectSessionPanel() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsSecret, setNeedsSecret] = useState(false);
   const [deepLink, setDeepLink] = useState<string | null>(null);
 
   const createSession = useCallback(async () => {
     setBusy(true);
     setError(null);
+    setNeedsSecret(false);
     setDeepLink(null);
     try {
       const res = await fetch("/api/desktop/session", { method: "POST" });
@@ -28,8 +32,16 @@ export function DesktopConnectSessionPanel() {
         window.location.href = "/desktop/connect";
         return;
       }
+      if (res.status === 503) {
+        setNeedsSecret(true);
+        setError(
+          data.error ??
+            "Sunucuda DESKTOP_SESSION_SECRET tanımlı değil. Aşağıdaki adımlarla ekle.",
+        );
+        return;
+      }
       if (!res.ok) {
-        setError(data.error ?? `Hata ${res.status}`);
+        setError(data.error ?? `Sunucu hatası (${res.status})`);
         return;
       }
       if (!data.token) {
@@ -39,7 +51,7 @@ export function DesktopConnectSessionPanel() {
       const q = new URLSearchParams({ token: data.token });
       setDeepLink(`promptly://connect?${q.toString()}`);
     } catch {
-      setError("Ağ hatası.");
+      setError("Ağ hatası. Bağlantını kontrol et.");
     } finally {
       setBusy(false);
     }
@@ -58,45 +70,72 @@ export function DesktopConnectSessionPanel() {
   }, [deepLink]);
 
   return (
-    <Card className="w-full max-w-[420px] border-0 shadow-xl ring-1 ring-black/5 dark:ring-white/10">
-      <CardHeader className="space-y-1 pb-2 text-center">
+    <Card className="w-full overflow-hidden border bg-card shadow-lg">
+      <CardHeader className="space-y-1 border-b bg-muted/30 px-6 pb-4 pt-6 text-center">
         <CardTitle className="text-xl font-semibold tracking-tight">
-          Masaüstünü bağla
+          Mac uygulamasını bağla
         </CardTitle>
-        <CardDescription className="text-[15px] leading-snug">
-          Bu Mac’e tek seferlik oturum anahtarı gönder. Uygulama açıkken aşağıdan
-          devam et.
+        <CardDescription className="text-[15px] leading-relaxed">
+          Tek kullanımlık oturum anahtarı oluştur; Promptly masaüstünde{" "}
+          <span className="whitespace-nowrap">«Panodan bağlan»</span> veya uygulama
+          bağlantısıyla kullan.
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col items-center gap-4 px-6 pb-6">
-        {!deepLink ? (
-          <Button
-            type="button"
-            disabled={busy}
-            onClick={() => void createSession()}
-            className="w-full"
+
+      <CardContent className="flex flex-col gap-6 px-6 py-6">
+        {needsSecret || (error && error.toLowerCase().includes("desktop_session")) ? (
+          <DesktopConnectEnvHelp variant="prominent" />
+        ) : null}
+
+        {error && !needsSecret ? (
+          <div
+            className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+            role="alert"
           >
-            {busy ? "Hazırlanıyor…" : "Bağlantıyı oluştur"}
-          </Button>
+            {error}
+          </div>
+        ) : null}
+
+        {!deepLink ? (
+          <div className="flex flex-col gap-4">
+            <Button
+              type="button"
+              size="lg"
+              disabled={busy}
+              className="h-12 w-full rounded-xl text-base font-semibold shadow-sm"
+              onClick={() => void createSession()}
+            >
+              {busy ? "Hazırlanıyor…" : "Bağlantıyı oluştur"}
+            </Button>
+            <details className="rounded-xl border border-dashed border-border/80 bg-muted/20 px-4 py-3">
+              <summary className="cursor-pointer text-sm font-medium text-foreground outline-none">
+                Sunucu sırrı (DESKTOP_SESSION_SECRET) nereden gelir?
+              </summary>
+              <div className="mt-3 border-t border-border/60 pt-3">
+                <DesktopConnectEnvHelp variant="compact" />
+              </div>
+            </details>
+          </div>
         ) : (
-          <>
-            <p className="text-center text-sm text-muted-foreground">
-              Önce uygulamada açmayı dene; olmazsa jetonu kopyalayıp uygulamada
-              «Panodan bağlan» kullan.
+          <div className="flex flex-col gap-3">
+            <p className="text-center text-sm leading-relaxed text-muted-foreground">
+              Önce uygulamayı açmayı dene. Açılmazsa jetonu kopyala, uygulamada{" "}
+              <strong className="text-foreground">Panodan bağlan</strong>’a bas.
             </p>
             <a
               href={deepLink}
               className={cn(
-                buttonVariants({ variant: "default" }),
-                "inline-flex w-full",
+                buttonVariants({ variant: "default", size: "lg" }),
+                "h-12 w-full rounded-xl text-base font-semibold shadow-sm",
               )}
             >
-              Promptly uygulamasında aç
+              Promptly’de aç
             </a>
             <Button
               type="button"
               variant="outline"
-              className="w-full"
+              size="lg"
+              className="h-12 w-full rounded-xl text-base"
               onClick={() => void copyTokenFromLink()}
             >
               Jetonu panoya kopyala
@@ -108,27 +147,28 @@ export function DesktopConnectSessionPanel() {
               className="text-muted-foreground"
               onClick={() => {
                 setDeepLink(null);
+                setError(null);
+                setNeedsSecret(false);
               }}
             >
-              Yeni bağlantı
+              Baştan başla
             </Button>
-          </>
+          </div>
         )}
-        {error ? (
-          <p className="text-center text-sm text-destructive" role="alert">
-            {error}
-          </p>
-        ) : null}
 
-        <Link
-          href="/library"
-          className={cn(
-            buttonVariants({ variant: "ghost", size: "sm" }),
-            "text-muted-foreground",
-          )}
-        >
-          Kütüphaneye dön
-        </Link>
+        <Separator />
+
+        <div className="flex flex-col items-center gap-2">
+          <Link
+            href="/library"
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "sm" }),
+              "text-muted-foreground",
+            )}
+          >
+            Kütüphaneye dön
+          </Link>
+        </div>
       </CardContent>
     </Card>
   );
