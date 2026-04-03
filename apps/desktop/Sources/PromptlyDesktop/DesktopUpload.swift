@@ -80,7 +80,7 @@ enum DesktopUpload {
     private static let legacyKeyHeader = "x-promptly-desktop-key"
 
     /// 1) POST ile Mux PUT URL al 2) dosyayı PUT et (ilerleme isteğe bağlı).
-    /// `sessionToken`: Clerk JWT (masaüstü tarayıcı girişi veya `/desktop/token`). `legacyDesktopKey`: sunucu anahtarı (yedek).
+    /// `sessionToken`: Clerk JWT (elle yapıştırılabilir). `legacyDesktopKey`: DESKTOP_APIKEY yedeği.
     static func uploadRecording(
         fileURL: URL,
         title: String,
@@ -95,7 +95,7 @@ enum DesktopUpload {
             throw DesktopUploadError.invalidURL
         }
 
-        let endpoint = base.appendingPathComponent("api/desktop/mux-upload")
+        let endpoint = base.appendingPathComponent("api/mux/upload")
 
         var create = URLRequest(url: endpoint)
         create.httpMethod = "POST"

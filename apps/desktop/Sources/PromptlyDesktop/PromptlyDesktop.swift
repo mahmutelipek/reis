@@ -29,15 +29,13 @@ struct ContentView: View {
     @State private var uploadLog: String = ""
     @State private var uploadBusy = false
     @State private var uploadProgress: Double?
-    @State private var signInBusy = false
-
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("Promptly")
                 .font(.largeTitle.bold())
 
             Text(
-                "Kayıtlar web’deki kütüphanende ve paylaşım sayfasında görünür. «E-posta ile giriş yap» ile tarayıcıda Clerk hesabınla (e-posta) oturum açarsın; jeton uygulamaya otomatik yazılır. Xcode ile derlerken Info.plist’e URL şeması «promptly» eklemen gerekir (örnek repoda Promptly-Info.plist.example)."
+                "Kayıtlar web kütüphanesinde görünür. Yükleme için Clerk JWT’yi aşağıya yapıştır veya Gelişmiş’te sunucu anahtarını (DESKTOP_APIKEY) kullan. Web’de oturum açarak da aynı hesaba yükleyebilirsin (tarayıcı çerezi; uygulama ayrı)."
             )
             .font(.callout)
             .foregroundStyle(.secondary)
@@ -53,38 +51,8 @@ struct ContentView: View {
                             .textSelection(.enabled)
                             .foregroundStyle(.secondary)
                     }
-                    Button {
-                        Task {
-                            signInBusy = true
-                            defer { signInBusy = false }
-                            do {
-                                let tok = try await DesktopSignIn.signInWithBrowser(
-                                    apiBase: desktop.resolvedAPIBase,
-                                    anchorWindow: NSApp.keyWindow
-                                )
-                                desktop.sessionToken = tok
-                                uploadLog = "Giriş tamam. Videolar bu Clerk hesabına yüklenir."
-                            } catch {
-                                uploadLog = error.localizedDescription
-                            }
-                        }
-                    } label: {
-                        if signInBusy {
-                            Text("Giriş penceresi açık…")
-                        } else {
-                            Text("E-posta ile giriş yap (tarayıcı)")
-                        }
-                    }
-                    .disabled(signInBusy || URL(string: desktop.resolvedAPIBase) == nil)
 
-                    Button("Jetonu elle kopyala (yedek)") {
-                        if let url = desktop.desktopTokenPageURL {
-                            NSWorkspace.shared.open(url)
-                        }
-                    }
-                    .disabled(desktop.desktopTokenPageURL == nil)
-
-                    SecureField("Oturum jetonu (yedek: elle yapıştır)", text: $desktop.sessionToken)
+                    SecureField("Clerk oturum JWT (Bearer)", text: $desktop.sessionToken)
                         .textFieldStyle(.roundedBorder)
 
                     DisclosureGroup("Gelişmiş") {

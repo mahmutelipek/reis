@@ -13,7 +13,7 @@ const isPublicRoute = createRouteMatcher([
   "/v/(.*)",
   "/api/webhooks/(.*)",
   "/api/public/(.*)",
-  "/api/desktop/(.*)",
+  "/api/mux/upload",
   "/api/health",
 ]);
 

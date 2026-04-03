@@ -17,6 +17,8 @@ type MuxWebhookPayload = {
     name?: string;
     resolution?: string;
     ext?: string;
+    /** saniye */
+    duration?: number;
   };
 };
 
@@ -120,6 +122,10 @@ export async function POST(req: Request) {
     }
 
     if (videoId && playbackId && asset.id) {
+      const durationSeconds =
+        typeof asset.duration === "number" && Number.isFinite(asset.duration)
+          ? Math.max(0, Math.round(asset.duration))
+          : null;
       await getDb()
         .update(videos)
         .set({
@@ -128,6 +134,7 @@ export async function POST(req: Request) {
           muxPlaybackId: playbackId,
           transcriptStatus: "pending",
           updatedAt: new Date(),
+          ...(durationSeconds != null ? { durationSeconds } : {}),
         })
         .where(eq(videos.id, videoId));
     }

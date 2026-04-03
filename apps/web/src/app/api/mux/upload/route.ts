@@ -1,7 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { createMuxDirectUploadForUser } from "@/lib/create-mux-upload";
 import { isClerkConfigured } from "@/lib/clerk-config";
+import { resolveMuxUploadUserId } from "@/lib/mux-upload-auth";
 
 export async function POST(req: Request) {
   if (!isClerkConfigured()) {
@@ -11,9 +11,15 @@ export async function POST(req: Request) {
     );
   }
 
-  const { userId } = await auth();
+  const userId = await resolveMuxUploadUserId(req);
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      {
+        error:
+          "Yetkisiz: Web’de oturum aç veya Bearer Clerk JWT / x-promptly-desktop-key (geliştirici) kullan.",
+      },
+      { status: 401 },
+    );
   }
 
   let title: string | undefined;

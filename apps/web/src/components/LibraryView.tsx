@@ -2,24 +2,25 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, type MouseEvent } from "react";
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import {
-  Bell,
   ChevronDown,
+  ChevronsLeft,
+  ChevronsRight,
   Disc,
   HelpCircle,
   ImageIcon,
   Library,
-  Link2,
+  Menu,
   MonitorPlay,
   Search,
   Settings2,
-  UserPlus,
   Video,
   Eye,
   MessageCircle,
   Smile,
 } from "lucide-react";
+import { LibraryNotificationsMenu } from "@/components/LibraryNotificationsMenu";
 import { LibraryUserMenu } from "@/components/LibraryUserMenu";
 import { RetranscribeButton } from "@/components/RetranscribeButton";
 import { VideoSharePasswordSettings } from "@/components/VideoSharePasswordSettings";
@@ -54,6 +55,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { formatDurationShort } from "@/lib/format-duration";
 
 export type LibraryVideoItem = {
   id: string;
@@ -64,6 +66,9 @@ export type LibraryVideoItem = {
   sharePasswordHash: string | null;
   createdAt: string;
   viewers: number;
+  commentCount: number;
+  reactionCount: number;
+  durationSeconds: number | null;
   muxPlaybackId: string | null;
   archivedAt: string | null;
 };
@@ -156,7 +161,9 @@ function VideoCardLoom({
             </div>
           )}
           <span className="pointer-events-none absolute right-2 bottom-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-bold text-white">
-            {v.status === "ready" ? "Video" : "İşleniyor"}
+            {v.status === "ready"
+              ? formatDurationShort(v.durationSeconds)
+              : "İşleniyor"}
           </span>
         </Link>
       ) : (
@@ -171,40 +178,37 @@ function VideoCardLoom({
         className="cursor-pointer space-y-2 p-4"
         onClick={openVideoDetail}
       >
-        <div className="mb-2 flex items-start justify-between gap-2">
-          <div className="flex min-w-0 flex-1 items-start gap-2">
-            <Avatar size="sm" className="size-6 shrink-0 ring-0">
-              {userImageUrl ? (
-                <AvatarImage src={userImageUrl} alt="" />
-              ) : null}
-              <AvatarFallback className="text-[9px]">
-                {initials(userDisplayName)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <p className="truncate text-xs font-semibold text-gray-900">
-                {userDisplayName}
-              </p>
-              <p className="text-[10px] text-gray-500">
-                {v.sharePasswordHash ? "Şifre korumalı" : "Herkese açık"}
-              </p>
-            </div>
-          </div>
+        <div className="mb-2 flex items-start gap-2">
+          <Avatar size="sm" className="size-6 shrink-0 ring-0">
+            {userImageUrl ? (
+              <AvatarImage src={userImageUrl} alt="" />
+            ) : null}
+            <AvatarFallback className="text-[9px]">
+              {initials(userDisplayName)}
+            </AvatarFallback>
+          </Avatar>
           <div
-            className="flex shrink-0 items-center gap-1"
+            className="min-w-0 flex-1"
             data-card-interactive
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
           >
-            <span className="text-[10px] text-gray-400">
-              {relativeTimeTr(v.createdAt)}
-            </span>
-            <VideoShareMenu
-              shareSlug={v.shareSlug}
-              appBaseUrl={appBaseUrl}
-              status={v.status}
-              hasPassword={!!v.sharePasswordHash}
-            />
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="truncate text-xs font-semibold text-gray-900">
+                {userDisplayName}
+              </p>
+              <span className="shrink-0 text-[10px] text-gray-400">
+                {relativeTimeTr(v.createdAt)}
+              </span>
+            </div>
+            <div className="mt-0.5">
+              <VideoShareMenu
+                shareSlug={v.shareSlug}
+                appBaseUrl={appBaseUrl}
+                status={v.status}
+                hasPassword={!!v.sharePasswordHash}
+              />
+            </div>
           </div>
         </div>
 
@@ -217,16 +221,18 @@ function VideoCardLoom({
           />
         </div>
 
-        <div className="flex items-center gap-4 text-[10px] text-gray-400">
+        <div className="flex items-center gap-4 text-[10px] text-gray-500">
           <span className="inline-flex items-center gap-1">
             <Eye className="size-3" aria-hidden />
             {v.viewers}
           </span>
-          <span className="inline-flex items-center gap-1 opacity-70">
-            <MessageCircle className="size-3" aria-hidden />0
+          <span className="inline-flex items-center gap-1">
+            <MessageCircle className="size-3" aria-hidden />
+            {v.commentCount}
           </span>
-          <span className="inline-flex items-center gap-1 opacity-70">
-            <Smile className="size-3" aria-hidden />0
+          <span className="inline-flex items-center gap-1">
+            <Smile className="size-3" aria-hidden />
+            {v.reactionCount}
           </span>
         </div>
 
@@ -273,6 +279,87 @@ function VideoCardLoom({
   );
 }
 
+const SIDEBAR_STORAGE_KEY = "promptly.library.sidebarOpen";
+
+type LibrarySidebarBodyProps = {
+  onNavigate?: () => void;
+};
+
+function LibrarySidebarBody({ onNavigate }: LibrarySidebarBodyProps) {
+  return (
+    <>
+      <div className="p-4 pb-2">
+        <Link
+          href="/library"
+          onClick={onNavigate}
+          className="-m-1 flex min-w-0 items-center gap-2 rounded-md p-1 text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+        >
+          <div className="flex size-[22px] shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
+            <Video className="size-3.5" aria-hidden />
+          </div>
+          <span className="truncate text-[17px] font-bold tracking-tight">
+            Promptly
+          </span>
+        </Link>
+      </div>
+
+      <div className="px-3 pb-3">
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            nativeButton
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "h-auto w-full justify-between gap-2 border-sidebar-border bg-sidebar-accent/40 px-3 py-2.5 font-normal shadow-none hover:bg-sidebar-accent",
+            )}
+          >
+            <div className="flex flex-col items-start text-left">
+              <span className="text-sm font-semibold text-sidebar-foreground">
+                Çalışma alanı
+              </span>
+              <span className="text-xs text-muted-foreground">Varsayılan</span>
+            </div>
+            <ChevronDown className="size-4 shrink-0 opacity-60" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-56">
+            <DropdownMenuItem>Varsayılan alan</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <Separator className="mx-3 bg-sidebar-border" />
+
+      <nav
+        className="flex flex-1 flex-col gap-0.5 p-3"
+        aria-label="Kütüphane"
+      >
+        <div
+          className="flex items-center gap-2 rounded-md bg-sidebar-accent px-2 py-2 text-sm font-medium text-sidebar-accent-foreground"
+          aria-current="page"
+        >
+          <Library className="size-[18px] shrink-0 opacity-90" />
+          Kütüphane
+        </div>
+      </nav>
+
+      <div className="mt-auto space-y-3 p-4">
+        <Button
+          size="lg"
+          className="h-12 w-full rounded-full font-bold shadow-md"
+          type="button"
+          onClick={() =>
+            window.alert(
+              "Video kaydetmek için macOS Promptly uygulamasıyla kayıt oluşturabilirsin.",
+            )
+          }
+        >
+          <Disc className="mr-2 size-4" />
+          Video kaydet
+        </Button>
+      </div>
+    </>
+  );
+}
+
 function VideoGrid({
   items,
   appBaseUrl,
@@ -315,6 +402,42 @@ export function LibraryView({
   const [sortBy, setSortBy] = useState<"date" | "title">("date");
   const [sortOrder, setSortOrder] = useState<"new" | "old">("new");
   const [mainTab, setMainTab] = useState("videos");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [isMd, setIsMd] = useState(true);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const apply = () => setIsMd(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem(SIDEBAR_STORAGE_KEY);
+      if (v === "0") setSidebarOpen(false);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SIDEBAR_STORAGE_KEY, sidebarOpen ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  }, [sidebarOpen]);
+
+  function toggleNav() {
+    if (isMd) {
+      setSidebarOpen((o) => !o);
+    } else {
+      setMobileDrawerOpen((o) => !o);
+    }
+  }
 
   const sortedActive = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -351,133 +474,77 @@ export function LibraryView({
         : "—";
 
   return (
-    <div className="flex h-svh w-full overflow-hidden bg-[#F9FAFB] text-gray-900">
-      <aside className="hidden w-64 shrink-0 flex-col overflow-y-auto border-r border-gray-200 bg-white md:flex [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-200">
-        <div className="p-4 pb-2">
-          <Link
-            href="/library"
-            className="-m-1 flex min-w-0 items-center gap-2 rounded-md p-1 transition-colors hover:bg-muted/60"
-          >
-            <div className="flex size-[22px] shrink-0 items-center justify-center rounded bg-primary text-primary-foreground">
-              <Video className="size-3.5" aria-hidden />
-            </div>
-            <span className="truncate text-[17px] font-bold tracking-tight">
-              Promptly
-            </span>
-          </Link>
-        </div>
+    <div className="flex h-svh w-full overflow-hidden bg-muted/30 text-foreground">
+      {mobileDrawerOpen ? (
+        <button
+          type="button"
+          className="fixed inset-0 z-40 bg-black/40 md:hidden"
+          aria-label="Menüyü kapat"
+          onClick={() => setMobileDrawerOpen(false)}
+        />
+      ) : null}
 
-        <div className="px-3 pb-3">
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              nativeButton
-              className={cn(
-                buttonVariants({ variant: "outline" }),
-                "h-auto w-full justify-between gap-2 px-3 py-2.5 font-normal shadow-none",
-              )}
-            >
-              <div className="flex flex-col items-start text-left">
-                <span className="text-sm font-semibold">Çalışma alanı</span>
-                <span className="text-xs text-muted-foreground">
-                  Varsayılan
-                </span>
-              </div>
-              <ChevronDown className="size-4 shrink-0 opacity-60" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
-              <DropdownMenuItem>Varsayılan alan</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button
-            variant="outline"
-            size="sm"
-            className="mt-2 w-full justify-start gap-2 shadow-none"
-            type="button"
-            onClick={() =>
-              window.alert(
-                "Ekip daveti yakında: ortak kütüphane ve paylaşılan klasörler.",
-              )
-            }
-          >
-            <UserPlus className="size-4 shrink-0" />
-            Ekip davet et
-          </Button>
-        </div>
-
-        <Separator className="mx-3" />
-
-        <nav className="flex flex-1 flex-col gap-0.5 p-3" aria-label="Kütüphane">
-          <div
-            className="flex items-center gap-3 rounded-lg border-l-4 border-primary bg-primary/5 py-2 pr-2 pl-2 text-sm font-medium text-primary"
-            aria-current="page"
-          >
-            <Library className="size-5 shrink-0" />
-            Kütüphane
-          </div>
-          <Link
-            href="/desktop/token"
-            className={cn(
-              buttonVariants({ variant: "ghost" }),
-              "h-9 w-full justify-start gap-3 px-2 text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <Link2 className="size-5 shrink-0" />
-            Masaüstü bağlantısı
-          </Link>
-        </nav>
-
-        <div className="mt-auto space-y-3 p-4">
-          <Card className="border-primary/20 bg-primary/[0.06] shadow-none">
-            <CardHeader className="space-y-1 p-4 pb-2">
-              <CardTitle className="text-sm font-semibold leading-snug">
-                Ekibi büyüt
-              </CardTitle>
-              <CardDescription className="text-xs leading-relaxed">
-                Davet ve ortak alanlar hazır olunca buradan yönetilecek.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <Button
-                size="sm"
-                className="w-full font-semibold"
-                type="button"
-                onClick={() =>
-                  window.alert(
-                    "Şimdilik videoları paylaşım linkiyle gönderebilirsin; toplu davet üzerinde çalışıyoruz.",
-                  )
-                }
-              >
-                Davet gönder
-              </Button>
-            </CardContent>
-          </Card>
-          <Button
-            size="lg"
-            className="h-12 w-full rounded-full font-bold shadow-md"
-            type="button"
-            onClick={() =>
-              window.alert(
-                "macOS Promptly: «E-posta ile giriş yap» → kayıt. Yedek: Masaüstü bağlantısı.",
-              )
-            }
-          >
-            <Disc className="mr-2 size-4" />
-            Video kaydet
-          </Button>
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-xl transition-transform duration-200 ease-out md:hidden",
+          mobileDrawerOpen ? "translate-x-0" : "-translate-x-full",
+        )}
+      >
+        <div className="flex h-full flex-col overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-sidebar-border">
+          <LibrarySidebarBody onNavigate={() => setMobileDrawerOpen(false)} />
         </div>
       </aside>
 
-      <main className="relative flex min-w-0 flex-1 flex-col bg-white">
-        <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-gray-200 bg-white px-4 sm:px-8">
-          <div className="min-w-0 flex-1 max-w-2xl">
-            <div className="relative">
+      <aside
+        className={cn(
+          "hidden shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-out md:flex",
+          sidebarOpen ? "w-64" : "w-0 border-transparent",
+        )}
+        aria-hidden={!sidebarOpen}
+      >
+        <div className="flex h-full w-64 flex-col overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-sidebar-border">
+          <LibrarySidebarBody />
+        </div>
+      </aside>
+
+      <main className="relative flex min-w-0 flex-1 flex-col bg-background">
+        <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-card px-3 sm:px-6">
+          <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3 max-w-2xl">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="size-9 shrink-0 border-border shadow-xs"
+              onClick={toggleNav}
+              aria-label={
+                isMd
+                  ? sidebarOpen
+                    ? "Kenar çubuğunu daralt"
+                    : "Kenar çubuğunu aç"
+                  : mobileDrawerOpen
+                    ? "Menüyü kapat"
+                    : "Menüyü aç"
+              }
+              aria-expanded={isMd ? sidebarOpen : mobileDrawerOpen}
+            >
+              {isMd ? (
+                sidebarOpen ? (
+                  <ChevronsLeft className="size-4" aria-hidden />
+                ) : (
+                  <ChevronsRight className="size-4" aria-hidden />
+                )
+              ) : (
+                <Menu className="size-4" aria-hidden />
+              )}
+            </Button>
+            <div className="relative min-w-0 flex-1">
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Kişi, başlık veya video ara…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="h-10 rounded-full border-gray-200 bg-white pl-10 shadow-none focus-visible:border-primary focus-visible:ring-primary/25"
+                className="h-10 rounded-full border-border bg-background pl-10 shadow-none focus-visible:border-primary focus-visible:ring-primary/25"
               />
             </div>
           </div>
@@ -504,30 +571,7 @@ export function LibraryView({
             >
               Yükselt
             </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                nativeButton
-                className={cn(
-                  buttonVariants({ variant: "ghost", size: "icon" }),
-                  "relative shrink-0",
-                )}
-                aria-label="Bildirimler"
-              >
-                <Bell className="size-5 text-muted-foreground" />
-                <span className="absolute top-1 right-1 size-2 rounded-full bg-primary ring-2 ring-white" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem
-                  onClick={() =>
-                    window.alert(
-                      "Henüz bildirim yok. Video işlendiğinde ve paylaşımda burada görünecek.",
-                    )
-                  }
-                >
-                  Bildirim merkezi (yakında)
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <LibraryNotificationsMenu />
             <LibraryUserMenu />
           </div>
         </header>
@@ -553,42 +597,18 @@ export function LibraryView({
                 >
                   Yeni klasör
                 </Button>
-                <DropdownMenu>
-                  <div className="inline-flex rounded-lg shadow-sm">
-                    <Button
-                      size="sm"
-                      className="rounded-r-none border-r border-primary/30 font-semibold shadow-none"
-                      type="button"
-                      onClick={() =>
-                        window.alert(
-                          "macOS Promptly: «E-posta ile giriş yap» → kayıt. Yedek: Masaüstü bağlantısı.",
-                        )
-                      }
-                    >
-                      Yeni video
-                    </Button>
-                    <DropdownMenuTrigger
-                      nativeButton
-                      className={cn(
-                        buttonVariants({ size: "sm" }),
-                        "rounded-l-none rounded-r-lg px-2.5 shadow-none",
-                      )}
-                    >
-                      <ChevronDown className="size-4" />
-                    </DropdownMenuTrigger>
-                  </div>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem
-                      onClick={() =>
-                        window.alert(
-                          "Masaüstü: Xcode + promptly URL şeması. Sunucu PromptlyConfig.",
-                        )
-                      }
-                    >
-                      Masaüstü kurulumu
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <Button
+                  size="sm"
+                  className="font-semibold shadow-none"
+                  type="button"
+                  onClick={() =>
+                    window.alert(
+                      "Yeni kayıt için macOS Promptly uygulamasını kullan.",
+                    )
+                  }
+                >
+                  Yeni video
+                </Button>
               </div>
             </div>
           </div>

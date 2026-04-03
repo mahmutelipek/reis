@@ -34,7 +34,7 @@ cd apps/web && npm run db:push
 
 **Mux webhooks** şu olayları içermeli: `video.asset.ready`, `video.asset.static_rendition.ready` (transcript için), `video.asset.errored`, `video.upload.cancelled`. Transcript için ayrıca `OPENAI_API_KEY` gerekir.
 
-**İzleyici sayısı:** `/v/...` sayfası `POST /api/public/views` ile oturum başına bir kayıt günceller; kütüphanede “izleyici oturumu” bunu gösterir. **Masaüstü tarayıcı girişi** için `desktop_handoffs` tablosu eklenir; şema değişince `npm run db:push` tekrar çalıştır.
+**İzleyici sayısı:** `/v/...` sayfası `POST /api/public/views` ile oturum başına bir kayıt günceller; kütüphanede “izleyici oturumu” bunu gösterir.
 
 **Paylaşım şifresi:** kütüphanede videoya şifre verebilirsin; izleyici `/v/...` üzerinde doğrular. `SHARE_UNLOCK_SECRET` (≥16 karakter) `.env.local` içinde olmalı.
 
@@ -63,7 +63,7 @@ open .build/debug/PromptlyDesktop
 
 Xcode ile açmak için `Package.swift` içeren klasörü açın.
 
-**Web’e yükleme:** Önerilen: uygulamada **E-posta ile giriş yap** → sistem tarayıcı oturumunda Clerk ile giriş → JWT otomatik kaydedilir (`desktop_handoffs` tablosu için üretimde `npm run db:push` gerekir). Xcode hedefine `promptly` URL şeması ekleyin (`Promptly-Info.plist.example`). Yedek: web `/desktop/token` ile jeton yapıştırma. Geliştirici yedeği: `.env.local` içinde `DESKTOP_APIKEY` + `DESKTOP_OWNER_CLERK_USER_ID` ve uygulamada aynı anahtar.
+**Web’e yükleme:** macOS uygulaması `POST /api/mux/upload` çağırır (aynı doğrulama web oturumu, `Authorization: Bearer <Clerk JWT>` veya `x-promptly-desktop-key` + `DESKTOP_OWNER_CLERK_USER_ID`). Ayrıntılar `apps/web/.env.example`.
 
 ## PRD
 

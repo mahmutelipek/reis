@@ -1,7 +1,7 @@
 import Combine
 import Foundation
 
-/// Sabit API kökü (PromptlyConfig) + Clerk JWT (tercihen uygulama içi tarayıcı girişi; yedek: /desktop/token).
+/// Sabit API kökü (PromptlyConfig) + Clerk JWT veya sunucu anahtarı (DESKTOP_APIKEY).
 final class DesktopSettings: ObservableObject {
     private enum K {
         static let apiBaseOverride = "promptly.apiBaseOverride"
@@ -15,7 +15,7 @@ final class DesktopSettings: ObservableObject {
         didSet { UserDefaults.standard.set(apiBaseOverride, forKey: K.apiBaseOverride) }
     }
 
-    /// Bearer: tarayıcıda Clerk oturumu sonrası alınan JWT (otomatik veya /desktop/token yedeği).
+    /// Bearer: Clerk oturum JWT (Clerk panosu / geliştirme araçlarından yapıştırılabilir).
     @Published var sessionToken: String {
         didSet { UserDefaults.standard.set(sessionToken, forKey: K.sessionToken) }
     }
@@ -52,7 +52,4 @@ final class DesktopSettings: ObservableObject {
         return !t.isEmpty || !l.isEmpty
     }
 
-    var desktopTokenPageURL: URL? {
-        URL(string: resolvedAPIBase + "/desktop/token")
-    }
 }

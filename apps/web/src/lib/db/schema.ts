@@ -29,6 +29,8 @@ export const videos = pgTable("videos", {
     .notNull(),
   /** Doluysa kayıt Arşiv sekmesinde gösterilir */
   archivedAt: timestamp("archived_at", { withTimezone: true }),
+  /** Mux asset süresi (sn); webhook ile dolar */
+  durationSeconds: integer("duration_seconds"),
 });
 
 export type Video = typeof videos.$inferSelect;
@@ -61,14 +63,59 @@ export const videoViews = pgTable(
 
 export type VideoView = typeof videoViews.$inferSelect;
 
-/**
- * Masaüstü: tarayıcıda Clerk oturumu → tek seferlik kod → uygulama JWT alır (yapıştırma yok).
- */
-export const desktopHandoffs = pgTable("desktop_handoffs", {
-  id: uuid("id").primaryKey(),
-  clerkJwt: text("clerk_jwt").notNull(),
-  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-  consumedAt: timestamp("consumed_at", { withTimezone: true }),
+export const videoComments = pgTable("video_comments", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  videoId: uuid("video_id")
+    .notNull()
+    .references(() => videos.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull(),
+  authorName: text("author_name").notNull(),
+  body: text("body").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
-export type DesktopHandoff = typeof desktopHandoffs.$inferSelect;
+export type VideoComment = typeof videoComments.$inferSelect;
+
+export const videoReactions = pgTable(
+  "video_reactions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    videoId: uuid("video_id")
+      .notNull()
+      .references(() => videos.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
+    kind: text("kind").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("video_reactions_video_user_kind_uidx").on(
+      t.videoId,
+      t.userId,
+      t.kind,
+    ),
+  ],
+);
+
+export type VideoReaction = typeof videoReactions.$inferSelect;
+
+export const userNotifications = pgTable("user_notifications", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id").notNull(),
+  type: text("type").notNull(),
+  videoId: uuid("video_id")
+    .notNull()
+    .references(() => videos.id, { onDelete: "cascade" }),
+  actorUserId: text("actor_user_id"),
+  title: text("title").notNull(),
+  body: text("body"),
+  readAt: timestamp("read_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export type UserNotification = typeof userNotifications.$inferSelect;

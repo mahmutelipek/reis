@@ -4,18 +4,17 @@ import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import {
   Bell,
   Loader2,
-  MessageCircle,
   MoreHorizontal,
   PanelLeft,
   Scissors,
   Search,
-  SmilePlus,
   Sparkles,
   Video,
   Wand2,
 } from "lucide-react";
 import Link from "next/link";
 import { PublicShareCopyButton } from "@/components/PublicShareCopyButton";
+import { PublicVideoEngagement } from "@/components/public-video/PublicVideoEngagement";
 import { TrackedMuxPlayer } from "@/components/TrackedMuxPlayer";
 import { VideoTranscript } from "@/components/VideoTranscript";
 import {
@@ -202,38 +201,7 @@ export function PublicVideoDetailLoom({
             />
           </div>
 
-          <div className="mb-12 flex flex-wrap items-center justify-center gap-3">
-            <div className="flex rounded-full border border-gray-200 bg-white p-1 shadow-sm">
-              {["❤️", "👍", "🔥", "👏", "🙌", "👀"].map((e) => (
-                <button
-                  key={e}
-                  type="button"
-                  className="flex size-10 items-center justify-center rounded-full text-[20px] transition-colors hover:bg-gray-50"
-                  aria-label="Tepki"
-                >
-                  {e}
-                </button>
-              ))}
-              <div
-                className="mx-1 h-6 w-px self-center bg-gray-200"
-                aria-hidden
-              />
-              <button
-                type="button"
-                className="flex size-10 items-center justify-center rounded-full text-gray-600 transition-colors hover:bg-gray-50"
-                aria-label="Tepki ekle"
-              >
-                <SmilePlus className="size-[22px]" aria-hidden />
-              </button>
-            </div>
-            <button
-              type="button"
-              className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-5 py-2.5 text-[14px] font-medium text-gray-800 shadow-sm transition-colors hover:bg-gray-50"
-            >
-              <MessageCircle className="size-5" aria-hidden />
-              Yorum
-            </button>
-          </div>
+          <PublicVideoEngagement shareSlug={shareSlug} />
 
           <div className="mx-auto max-w-[1000px] pb-20">
             <h2 className="mb-3 text-[16px] font-bold text-gray-900">Özet</h2>
