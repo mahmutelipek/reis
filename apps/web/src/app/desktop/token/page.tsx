@@ -54,10 +54,10 @@ export default async function DesktopTokenPage() {
     <div className="mx-auto max-w-2xl px-4 py-12">
       <h1 className="text-2xl font-semibold tracking-tight">Masaüstü uygulaması</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Bu jeton, web’de şu anda giriş yaptığın Clerk hesabına bağlıdır. macOS
-        uygulamasına yapıştırdığında yüklenen videolar{" "}
-        <strong className="text-foreground">bu e-posta ile aynı kullanıcıya</strong>{" "}
-        kaydedilir.
+        Normal akış: macOS uygulamasında <strong className="text-foreground">E-posta ile giriş yap</strong> — tarayıcıda
+        giriş bittikten sonra jeton uygulamaya otomatik yazılır. Bu sayfa, otomatik giriş çalışmazsa veya geliştirici
+        yedeği için elle kopyalamak içindir. Jeton, şu an web’de açık olan Clerk hesabına bağlıdır; yapıştırınca
+        yüklemeler <strong className="text-foreground">bu kullanıcıya</strong> kaydedilir.
       </p>
       {email ? (
         <p className="mt-4 rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm">

@@ -19,7 +19,7 @@ export function DesktopSessionTokenPanel({ token }: { token: string }) {
   return (
     <div className="mt-6 space-y-3">
       <label className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-        Oturum jetonu (masaüstüne yapıştır)
+        Yedek: oturum jetonu (elle yapıştır)
       </label>
       <textarea
         readOnly

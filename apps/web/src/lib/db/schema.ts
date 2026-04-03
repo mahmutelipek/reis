@@ -60,3 +60,15 @@ export const videoViews = pgTable(
 );
 
 export type VideoView = typeof videoViews.$inferSelect;
+
+/**
+ * Masaüstü: tarayıcıda Clerk oturumu → tek seferlik kod → uygulama JWT alır (yapıştırma yok).
+ */
+export const desktopHandoffs = pgTable("desktop_handoffs", {
+  id: uuid("id").primaryKey(),
+  clerkJwt: text("clerk_jwt").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  consumedAt: timestamp("consumed_at", { withTimezone: true }),
+});
+
+export type DesktopHandoff = typeof desktopHandoffs.$inferSelect;

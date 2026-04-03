@@ -80,7 +80,7 @@ enum DesktopUpload {
     private static let legacyKeyHeader = "x-promptly-desktop-key"
 
     /// 1) POST ile Mux PUT URL al 2) dosyayı PUT et (ilerleme isteğe bağlı).
-    /// `sessionToken`: web `/desktop/token` Clerk JWT. `legacyDesktopKey`: opsiyonel sunucu anahtarı (yedek).
+    /// `sessionToken`: Clerk JWT (masaüstü tarayıcı girişi veya `/desktop/token`). `legacyDesktopKey`: sunucu anahtarı (yedek).
     static func uploadRecording(
         fileURL: URL,
         title: String,

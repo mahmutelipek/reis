@@ -391,7 +391,7 @@ export function LibraryView({
             className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
           >
             <Link2 className="size-4 shrink-0" />
-            Masaüstü jetonu
+            Masaüstü yedek jeton
           </Link>
           <div className="flex cursor-not-allowed items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-muted-foreground opacity-50">
             <MonitorPlay className="size-4 shrink-0" />
@@ -440,7 +440,7 @@ export function LibraryView({
             type="button"
             onClick={() =>
               window.alert(
-                "Kayıt: macOS Promptly uygulamasını açın (apps/desktop). Tarayıcıda bu hesapla giriş yapıp «Masaüstü jetonu»ndan jetonu kopyalayın; uygulamada yapıştırıp kayıt alın. Videolar kütüphanede ve paylaşım detayında görünür.",
+                "Kayıt: macOS Promptly uygulamasını açın (apps/desktop). Uygulamada «E-posta ile giriş yap» ile tarayıcıda bu hesapla giriş edin; jeton otomatik gelir. Gerekirse web’de «Masaüstü yedek jeton» ile elle kopyalayın. Videolar kütüphanede ve paylaşım detayında görünür.",
               )
             }
           >
@@ -510,7 +510,7 @@ export function LibraryView({
                     type="button"
                     onClick={() =>
                       window.alert(
-                        "macOS Promptly uygulaması: web’de oturum → Masaüstü jetonu → jetonu yapıştır → kayıt al.",
+                        "macOS Promptly: «E-posta ile giriş yap» → tarayıcıda Clerk ile giriş → kayıt al. Yedek: /desktop/token.",
                       )
                     }
                   >
@@ -527,7 +527,7 @@ export function LibraryView({
                   <DropdownMenuItem
                     onClick={() =>
                       window.alert(
-                        "Masaüstü: swift build → PromptlyDesktop. Varsayılan sunucu PromptlyConfig’te; jeton için /desktop/token.",
+                        "Masaüstü: swift build → PromptlyDesktop. Info.plist’e promptly URL şeması ekleyin. Sunucu PromptlyConfig’te.",
                       )
                     }
                   >

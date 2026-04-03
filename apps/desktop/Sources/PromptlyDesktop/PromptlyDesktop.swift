@@ -29,6 +29,7 @@ struct ContentView: View {
     @State private var uploadLog: String = ""
     @State private var uploadBusy = false
     @State private var uploadProgress: Double?
+    @State private var signInBusy = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -36,7 +37,7 @@ struct ContentView: View {
                 .font(.largeTitle.bold())
 
             Text(
-                "Kayıtlar web’deki kütüphanende ve /v/… paylaşım sayfasında görünür. Aynı Clerk hesabı (e-posta) için tarayıcıda oturum jetonu alıp buraya yapıştırırsın; API kökü uygulamada sabittir (gerekirse Gelişmiş’ten değiştirirsin)."
+                "Kayıtlar web’deki kütüphanende ve paylaşım sayfasında görünür. «E-posta ile giriş yap» ile tarayıcıda Clerk hesabınla (e-posta) oturum açarsın; jeton uygulamaya otomatik yazılır. Xcode ile derlerken Info.plist’e URL şeması «promptly» eklemen gerekir (örnek repoda Promptly-Info.plist.example)."
             )
             .font(.callout)
             .foregroundStyle(.secondary)
@@ -52,21 +53,45 @@ struct ContentView: View {
                             .textSelection(.enabled)
                             .foregroundStyle(.secondary)
                     }
-                    Button("Jeton sayfasını tarayıcıda aç") {
+                    Button {
+                        Task {
+                            signInBusy = true
+                            defer { signInBusy = false }
+                            do {
+                                let tok = try await DesktopSignIn.signInWithBrowser(
+                                    apiBase: desktop.resolvedAPIBase,
+                                    anchorWindow: NSApp.keyWindow
+                                )
+                                desktop.sessionToken = tok
+                                uploadLog = "Giriş tamam. Videolar bu Clerk hesabına yüklenir."
+                            } catch {
+                                uploadLog = error.localizedDescription
+                            }
+                        }
+                    } label: {
+                        if signInBusy {
+                            Text("Giriş penceresi açık…")
+                        } else {
+                            Text("E-posta ile giriş yap (tarayıcı)")
+                        }
+                    }
+                    .disabled(signInBusy || URL(string: desktop.resolvedAPIBase) == nil)
+
+                    Button("Jetonu elle kopyala (yedek)") {
                         if let url = desktop.desktopTokenPageURL {
                             NSWorkspace.shared.open(url)
                         }
                     }
                     .disabled(desktop.desktopTokenPageURL == nil)
 
-                    SecureField("Oturum jetonu (web → Masaüstü jetonu)", text: $desktop.sessionToken)
+                    SecureField("Oturum jetonu (yedek: elle yapıştır)", text: $desktop.sessionToken)
                         .textFieldStyle(.roundedBorder)
 
                     DisclosureGroup("Gelişmiş") {
                         VStack(alignment: .leading, spacing: 8) {
                             TextField("Özel API kökü (boşsa varsayılan)", text: $desktop.apiBaseOverride)
                                 .textFieldStyle(.roundedBorder)
-                            SecureField("Yedek: DESKTOP_APIKEY (sadece jeton yoksa)", text: $desktop.legacyDesktopKey)
+                            SecureField("Yedek: DESKTOP_APIKEY (Clerk yoksa)", text: $desktop.legacyDesktopKey)
                                 .textFieldStyle(.roundedBorder)
                         }
                         .padding(.top, 6)

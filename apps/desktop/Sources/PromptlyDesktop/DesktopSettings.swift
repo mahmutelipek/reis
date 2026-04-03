@@ -1,7 +1,7 @@
 import Combine
 import Foundation
 
-/// Sabit API kökü (PromptlyConfig) + Clerk oturum jetonu (web’de /desktop/token ile aynı hesap / e-posta).
+/// Sabit API kökü (PromptlyConfig) + Clerk JWT (tercihen uygulama içi tarayıcı girişi; yedek: /desktop/token).
 final class DesktopSettings: ObservableObject {
     private enum K {
         static let apiBaseOverride = "promptly.apiBaseOverride"
@@ -15,7 +15,7 @@ final class DesktopSettings: ObservableObject {
         didSet { UserDefaults.standard.set(apiBaseOverride, forKey: K.apiBaseOverride) }
     }
 
-    /// Web’de giriş yaptığın hesapla aynı kullanıcıya yüklemek için: /desktop/token
+    /// Bearer: tarayıcıda Clerk oturumu sonrası alınan JWT (otomatik veya /desktop/token yedeği).
     @Published var sessionToken: String {
         didSet { UserDefaults.standard.set(sessionToken, forKey: K.sessionToken) }
     }

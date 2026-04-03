@@ -8,5 +8,16 @@
 	<string>Ekran kaydı ve sesli anlatım için mikrofon gerekir.</string>
 	<key>NSScreenCaptureUsageDescription</key>
 	<string>Async video mesajı oluşturmak için ekran kaydı gerekir.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Promptly OAuth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>promptly</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

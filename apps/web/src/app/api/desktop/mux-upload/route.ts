@@ -17,7 +17,7 @@ function authorizedParties(): string[] | undefined {
 }
 
 /**
- * Masaüstü: öncelik `Authorization: Bearer <Clerk oturum JWT>` (web /desktop/token).
+ * Masaüstü: öncelik `Authorization: Bearer <Clerk oturum JWT>` (uygulama tarayıcı girişi veya /desktop/token).
  * Yedek: `x-promptly-desktop-key` + DESKTOP_OWNER_CLERK_USER_ID (CI / tek kullanıcı).
  */
 export async function POST(req: Request) {
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         error:
-          "Yetkisiz: Tarayıcıda giriş yap → /desktop/token sayfasından oturum jetonunu kopyala ve masaüstünde yapıştır (Authorization: Bearer). Geliştirici yedeği: x-promptly-desktop-key.",
+          "Yetkisiz: Masaüstünde «E-posta ile giriş yap» kullan veya /desktop/token ile jeton yapıştır. Geliştirici yedeği: x-promptly-desktop-key.",
       },
       { status: 401 },
     );
