@@ -83,18 +83,6 @@ struct DesktopConnectGateView: View {
                     }
                     .buttonStyle(.plain)
                     .keyboardShortcut("l", modifiers: [.command])
-
-                    Button("Panodan yapıştır") {
-                        if let s = NSPasteboard.general.string(forType: .string)?
-                            .trimmingCharacters(in: .whitespacesAndNewlines),
-                           !s.isEmpty {
-                            desktop.sessionToken = s
-                        }
-                    }
-                    .buttonStyle(.link)
-                    .font(.caption)
-                    .foregroundStyle(Color(white: 0.42))
-                    .padding(.top, 20)
                 }
 
                 Spacer(minLength: 56)

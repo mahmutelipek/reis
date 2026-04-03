@@ -70,16 +70,6 @@ struct DesktopSettingsSheet: View {
                         dismiss()
                     }
                     .foregroundStyle(.red)
-
-                    Button {
-                        if let s = NSPasteboard.general.string(forType: .string)?
-                            .trimmingCharacters(in: .whitespacesAndNewlines),
-                           !s.isEmpty {
-                            desktop.sessionToken = s
-                        }
-                    } label: {
-                        Label("Panodan bağlan", systemImage: "doc.on.clipboard")
-                    }
                 } header: {
                     Text("Hesap")
                 }

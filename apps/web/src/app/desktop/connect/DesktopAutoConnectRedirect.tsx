@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { DesktopConnectEnvHelp } from "@/app/desktop/connect/DesktopConnectEnvHelp";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import {
@@ -60,11 +60,6 @@ export function DesktopAutoConnectRedirect() {
         const link = `promptly://connect?${q.toString()}`;
         setDeepLink(link);
         setPhase("opening");
-        try {
-          await navigator.clipboard.writeText(data.token);
-        } catch {
-          /* ignore */
-        }
         window.location.href = link;
         fallbackTimer = setTimeout(() => {
           if (!cancelled) setPhase("fallback");
@@ -82,18 +77,6 @@ export function DesktopAutoConnectRedirect() {
       if (fallbackTimer !== undefined) clearTimeout(fallbackTimer);
     };
   }, []);
-
-  const copyTokenFromLink = useCallback(async () => {
-    if (!deepLink) return;
-    const u = new URL(deepLink);
-    const token = u.searchParams.get("token");
-    if (!token) return;
-    try {
-      await navigator.clipboard.writeText(token);
-    } catch {
-      /* ignore */
-    }
-  }, [deepLink]);
 
   if (phase === "fetching" || phase === "opening") {
     return (
@@ -163,7 +146,7 @@ export function DesktopAutoConnectRedirect() {
           Uygulamayı aç
         </CardTitle>
         <CardDescription className="text-[15px] leading-relaxed">
-          Promptly otomatik açılmadıysa tıkla. Jeton yedek olarak panoda olmalı.
+          Tarayıcı uygulamayı açmana izin vermediyse aşağıdan Promptly’yi aç.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3 px-6 py-6">
@@ -178,15 +161,6 @@ export function DesktopAutoConnectRedirect() {
             Promptly’de aç
           </a>
         ) : null}
-        <Button
-          type="button"
-          variant="outline"
-          size="lg"
-          className="h-12 w-full rounded-xl text-base"
-          onClick={() => void copyTokenFromLink()}
-        >
-          Jetonu tekrar kopyala
-        </Button>
         <Separator />
         <Link
           href="/library"

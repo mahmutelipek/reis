@@ -57,18 +57,6 @@ export function DesktopConnectSessionPanel() {
     }
   }, []);
 
-  const copyTokenFromLink = useCallback(async () => {
-    if (!deepLink) return;
-    const u = new URL(deepLink);
-    const token = u.searchParams.get("token");
-    if (!token) return;
-    try {
-      await navigator.clipboard.writeText(token);
-    } catch {
-      /* ignore */
-    }
-  }, [deepLink]);
-
   return (
     <Card className="w-full overflow-hidden border bg-card shadow-lg">
       <CardHeader className="space-y-1 border-b bg-muted/30 px-6 pb-4 pt-6 text-center">
@@ -76,9 +64,8 @@ export function DesktopConnectSessionPanel() {
           Mac uygulamasını bağla
         </CardTitle>
         <CardDescription className="text-[15px] leading-relaxed">
-          Tek kullanımlık oturum anahtarı oluştur; Promptly masaüstünde{" "}
-          <span className="whitespace-nowrap">«Panodan bağlan»</span> veya uygulama
-          bağlantısıyla kullan.
+          Oturum bağlantısı oluştur; Mac uygulaması{" "}
+          <span className="whitespace-nowrap">promptly://</span> ile açılır.
         </CardDescription>
       </CardHeader>
 
@@ -119,8 +106,7 @@ export function DesktopConnectSessionPanel() {
         ) : (
           <div className="flex flex-col gap-3">
             <p className="text-center text-sm leading-relaxed text-muted-foreground">
-              Önce uygulamayı açmayı dene. Açılmazsa jetonu kopyala, uygulamada{" "}
-              <strong className="text-foreground">Panodan bağlan</strong>’a bas.
+              macOS izin penceresinde Promptly’yi aç. Açılmazsa aşağıdaki düğmeye tekrar bas.
             </p>
             <a
               href={deepLink}
@@ -131,15 +117,6 @@ export function DesktopConnectSessionPanel() {
             >
               Promptly’de aç
             </a>
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              className="h-12 w-full rounded-xl text-base"
-              onClick={() => void copyTokenFromLink()}
-            >
-              Jetonu panoya kopyala
-            </Button>
             <Button
               type="button"
               variant="ghost"
