@@ -10,7 +10,6 @@ struct PromptlyDesktopApp: App {
         WindowGroup {
             NavigationStack {
                 ContentView()
-                    .navigationTitle("Promptly")
             }
             .environmentObject(recorder)
             .environmentObject(desktop)
@@ -18,7 +17,7 @@ struct PromptlyDesktopApp: App {
                 desktop.handleConnectURL(url)
             }
         }
-        .defaultSize(width: 720, height: 640)
+        .defaultSize(width: 560, height: 520)
         .windowResizability(.contentSize)
 
         Window("Prompter", id: "prompter") {
@@ -34,174 +33,36 @@ struct PromptlyDesktopApp: App {
 struct ContentView: View {
     @EnvironmentObject private var recorder: ScreenRecorder
     @EnvironmentObject private var desktop: DesktopSettings
-    @Environment(\.openWindow) private var openWindow
 
     @State private var uploadLog: String = ""
     @State private var uploadBusy = false
     @State private var uploadProgress: Double?
 
+    private var hasCredential: Bool {
+        let t = desktop.sessionToken.trimmingCharacters(in: .whitespacesAndNewlines)
+        let l = desktop.legacyDesktopKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !t.isEmpty || !l.isEmpty
+    }
+
     var body: some View {
-        Form {
-            Section {
-                if PromptlyConfig.looksLikePlaceholder {
-                    Label {
-                        Text(
-                            "Sunucu adresi eksik: `PromptlyConfig.swift` veya `.promptly-api-base` / `PROMPTLY_API_BASE` ayarla."
-                        )
-                        .font(.subheadline)
-                        .foregroundStyle(.orange)
-                    } icon: {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.orange)
-                    }
-                } else {
-                    Label {
-                        Text(
-                            "Aşağıdan tarayıcıda giriş yap; bağlantıyı oluşturup bu uygulamaya aktar. Kayıtlar web kütüphanende."
-                        )
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    } icon: {
-                        Image(systemName: "link.circle.fill")
-                            .foregroundStyle(.blue.gradient)
-                            .symbolRenderingMode(.hierarchical)
-                    }
-                }
-            } header: {
-                Text("Özet")
-            }
-
-            Section {
-                LabeledContent("Sunucu") {
-                    Text(desktop.resolvedAPIBase)
-                        .font(.body.monospaced())
-                        .foregroundStyle(.secondary)
-                        .textSelection(.enabled)
-                        .multilineTextAlignment(.trailing)
-                        .lineLimit(3)
-                }
-
-                HStack {
-                    if desktop.sessionToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        Label("Oturum yok", systemImage: "person.crop.circle.badge.questionmark")
-                            .foregroundStyle(.secondary)
-                    } else {
-                        Label("Bağlı", systemImage: "checkmark.seal.fill")
-                            .foregroundStyle(.green)
-                    }
-                    Spacer()
-                    Button("Tarayıcıda giriş yap…") {
-                        if let url = desktop.browserConnectURL {
-                            NSWorkspace.shared.open(url)
-                        }
-                    }
-                    .keyboardShortcut("l", modifiers: [.command])
-                    if !desktop.sessionToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        Button("Çıkış") {
-                            desktop.clearSession()
-                        }
-                        .buttonStyle(.borderless)
-                    }
-                }
-
-                Button {
-                    if let s = NSPasteboard.general.string(forType: .string)?
-                        .trimmingCharacters(in: .whitespacesAndNewlines),
-                       !s.isEmpty {
-                        desktop.sessionToken = s
-                    }
-                } label: {
-                    Label("Panodan bağlan", systemImage: "doc.on.clipboard")
-                }
-            } header: {
-                Text("Hesap")
-            }
-
-            Section {
-                DisclosureGroup("Gelişmiş") {
-                    TextField("Özel API kökü", text: $desktop.apiBaseOverride)
-                    SecureField("Oturum jetonu (pdtk1…)", text: $desktop.sessionToken)
-                    SecureField("DESKTOP_APIKEY (yedek)", text: $desktop.legacyDesktopKey)
-                }
-                .padding(.top, 4)
-
-                Toggle("Kayıt bitince otomatik yükle", isOn: $desktop.autoUploadAfterRecording)
-            }
-
-            Section {
-                Button {
-                    openWindow(id: "prompter")
-                } label: {
-                    Label("Prompter penceresi", systemImage: "text.bubble")
-                }
-
-                if recorder.isRecording {
-                    Button(role: .destructive) {
-                        recorder.stopRecording()
-                    } label: {
-                        Label("Kaydı durdur", systemImage: "stop.circle.fill")
-                    }
-                } else {
-                    Button {
-                        recorder.startRecording()
-                    } label: {
-                        Label("Kaydı başlat", systemImage: "record.circle")
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.red)
-                }
-
-                if let url = recorder.lastRecordingURL, !recorder.isRecording, desktop.canUpload {
-                    Button {
-                        Task { await upload(url) }
-                    } label: {
-                        if uploadBusy {
-                            if let p = uploadProgress {
-                                Label(
-                                    "Yükleniyor… \(Int(p * 100))%",
-                                    systemImage: "arrow.up.circle"
-                                )
-                            } else {
-                                Label("Yükleniyor…", systemImage: "arrow.up.circle")
-                            }
-                        } else {
-                            Label("Son kaydı yükle", systemImage: "icloud.and.arrow.up")
-                        }
-                    }
-                    .disabled(uploadBusy)
-                }
-
-                if let url = recorder.lastRecordingURL, !recorder.isRecording {
-                    Button {
-                        NSWorkspace.shared.activateFileViewerSelecting([url])
-                    } label: {
-                        Label("Finder’da göster", systemImage: "folder")
-                    }
-                }
-            } header: {
-                Text("Kayıt")
-            }
-
-            Section {
-                Text(recorder.status)
-                    .font(.subheadline)
-                    .foregroundStyle(recorder.status.contains("Hata") ? Color.red : Color.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                if !uploadLog.isEmpty {
-                    Text(uploadLog)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .textSelection(.enabled)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            } header: {
-                Text("Durum")
+        Group {
+            if hasCredential {
+                signedInForm
+            } else {
+                DesktopConnectGateView()
             }
         }
-        .formStyle(.grouped)
-        .frame(minWidth: 560, minHeight: 500)
-        .padding(.top, 8)
+        .navigationTitle(hasCredential ? "Promptly" : "")
+    }
+
+    @ViewBuilder
+    private var signedInForm: some View {
+        DesktopRecordingHubView(
+            uploadLog: $uploadLog,
+            uploadBusy: $uploadBusy,
+            uploadProgress: $uploadProgress,
+            uploadAction: upload
+        )
         .onChange(of: recorder.lastRecordingURL) { newURL in
             guard desktop.autoUploadAfterRecording,
                   desktop.canUpload,

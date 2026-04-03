@@ -70,7 +70,11 @@ final class DesktopSettings: ObservableObject {
 
     var browserConnectURL: URL? {
         let base = resolvedAPIBase.trimmingCharacters(in: .whitespacesAndNewlines)
-        return URL(string: base + "/desktop/connect")
+        guard var c = URLComponents(string: base + "/desktop/connect") else {
+            return URL(string: base + "/desktop/connect")
+        }
+        c.queryItems = [URLQueryItem(name: "from_desktop", value: "1")]
+        return c.url
     }
 
 }

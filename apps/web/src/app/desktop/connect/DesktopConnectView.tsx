@@ -3,6 +3,7 @@
 import { SignIn, SignUp, useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { DesktopAutoConnectRedirect } from "@/app/desktop/connect/DesktopAutoConnectRedirect";
 import { DesktopConnectSessionPanel } from "@/app/desktop/connect/DesktopConnectSessionPanel";
 import { clerkDesktopConnectAppearance } from "@/lib/clerk-desktop-connect-appearance";
 import { buttonVariants } from "@/components/ui/button";
@@ -15,7 +16,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-function ConnectPageShell({ children }: { children: React.ReactNode }) {
+function ConnectPageShell({
+  children,
+  tagline,
+}: {
+  children: React.ReactNode;
+  tagline?: string;
+}) {
   return (
     <div className="min-h-svh bg-[#f2f2f7] dark:bg-zinc-950">
       <div className="mx-auto flex min-h-svh w-full max-w-[440px] flex-col justify-center px-4 py-10 sm:px-6">
@@ -27,7 +34,7 @@ function ConnectPageShell({ children }: { children: React.ReactNode }) {
             Promptly
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Masaüstü ↔ web hesabı
+            {tagline ?? "Masaüstü ↔ web hesabı"}
           </p>
         </header>
         {children}
@@ -36,9 +43,9 @@ function ConnectPageShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ConnectLoading() {
+function ConnectLoading({ tagline }: { tagline?: string }) {
   return (
-    <ConnectPageShell>
+    <ConnectPageShell tagline={tagline}>
       <Card className="border bg-card shadow-lg">
         <CardContent className="flex flex-col items-center gap-3 py-14 text-sm text-muted-foreground">
           <div
@@ -56,23 +63,37 @@ export function DesktopConnectView() {
   const { isLoaded, userId } = useAuth();
   const searchParams = useSearchParams();
   const authSignup = searchParams.get("auth") === "signup";
+  const fromDesktop = searchParams.get("from_desktop") === "1";
+  const connectPath = fromDesktop
+    ? "/desktop/connect?from_desktop=1"
+    : "/desktop/connect";
+  const signUpPath = fromDesktop
+    ? "/desktop/connect?from_desktop=1&auth=signup"
+    : "/desktop/connect?auth=signup";
+  const desktopTagline = fromDesktop
+    ? "Girişten sonra Mac uygulaması açılır."
+    : undefined;
 
   if (!isLoaded) {
-    return <ConnectLoading />;
+    return <ConnectLoading tagline={desktopTagline} />;
   }
 
   if (!userId) {
     return (
-      <ConnectPageShell>
+      <ConnectPageShell tagline={desktopTagline}>
         <Card className="overflow-hidden border bg-card shadow-lg">
           <CardHeader className="space-y-1 border-b bg-muted/30 px-6 pb-4 pt-6 text-center">
             <CardTitle className="text-xl font-semibold tracking-tight">
-              {authSignup ? "Hesap oluştur" : "Giriş yap"}
+              {authSignup ? "Hesap oluştur" : "Oturum aç"}
             </CardTitle>
             <CardDescription className="text-[15px] leading-relaxed">
-              {authSignup
-                ? "Aynı hesap web kütüphanende ve Mac uygulamasında kullanılır."
-                : "Sosyal hesap veya e‑posta ile devam et."}
+              {fromDesktop
+                ? authSignup
+                  ? "Kayıt ol; tarayıcı Promptly’yi açmana izin isteyecek."
+                  : "Giriş yap; tarayıcı Promptly’yi açmana izin isteyecek."
+                : authSignup
+                  ? "Aynı hesap web kütüphanende ve Mac uygulamasında kullanılır."
+                  : "Sosyal hesap veya e‑posta ile devam et."}
             </CardDescription>
           </CardHeader>
           <CardContent className="px-6 pb-6 pt-5">
@@ -81,15 +102,15 @@ export function DesktopConnectView() {
                 <SignUp
                   routing="virtual"
                   appearance={clerkDesktopConnectAppearance}
-                  signInUrl="/desktop/connect"
-                  forceRedirectUrl="/desktop/connect"
+                  signInUrl={connectPath}
+                  forceRedirectUrl={connectPath}
                 />
               ) : (
                 <SignIn
                   routing="virtual"
                   appearance={clerkDesktopConnectAppearance}
-                  signUpUrl="/desktop/connect?auth=signup"
-                  forceRedirectUrl="/desktop/connect"
+                  signUpUrl={signUpPath}
+                  forceRedirectUrl={connectPath}
                 />
               )}
               <Link
@@ -109,8 +130,12 @@ export function DesktopConnectView() {
   }
 
   return (
-    <ConnectPageShell>
-      <DesktopConnectSessionPanel />
+    <ConnectPageShell tagline={desktopTagline}>
+      {fromDesktop ? (
+        <DesktopAutoConnectRedirect />
+      ) : (
+        <DesktopConnectSessionPanel />
+      )}
     </ConnectPageShell>
   );
 }

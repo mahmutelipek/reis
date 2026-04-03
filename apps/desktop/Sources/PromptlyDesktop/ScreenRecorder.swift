@@ -10,6 +10,13 @@ final class ScreenRecorder: NSObject, ObservableObject {
     @Published private(set) var isRecording = false
     @Published private(set) var status: String = ""
     @Published private(set) var lastRecordingURL: URL?
+    /// Kayıt başladığında doldurulur (sol şerit süresi için).
+    @Published private(set) var recordingStartedAt: Date?
+    /// `nil` = tüm ekran; dolu = tek pencere (macOS 14+).
+    @Published var captureTargetWindowID: CGWindowID?
+    @Published var captureTargetWindowTitle: String?
+    /// Sistem / uygulama sesi (ScreenCaptureKit).
+    @Published var captureSystemAudio: Bool = true
 
     private var stream: SCStream?
     private var writer: AVAssetWriter?
@@ -33,45 +40,87 @@ final class ScreenRecorder: NSObject, ObservableObject {
         }
     }
 
+    /// Son kayıt dosyasını sil (Loom’daki çöp).
+    func discardLastRecording() {
+        guard let url = lastRecordingURL else { return }
+        try? FileManager.default.removeItem(at: url)
+        lastRecordingURL = nil
+        status = "Kayıt silindi."
+    }
+
     private func beginCapture() async {
         do {
             let content = try await SCShareableContent.excludingDesktopWindows(
                 false,
                 onScreenWindowsOnly: true
             )
-            guard let display = content.displays.first else {
-                await setStatus("Ekran bulunamadı.")
-                return
-            }
-
             let pid = ProcessInfo.processInfo.processIdentifier
-            let exclude = content.applications.filter { $0.processID == pid }
             let filter: SCContentFilter
-            if exclude.isEmpty {
-                filter = SCContentFilter(display: display, excludingWindows: [])
-                await setStatus("Uyarı: bu süreç pencereleri hariç tutulamadı (devam ediliyor).")
+
+            if let wid = captureTargetWindowID {
+                guard let win = content.windows.first(where: { $0.windowID == wid && $0.isOnScreen }) else {
+                    await setStatus(
+                        "Seçilen pencere yok. Yeniden seç veya «Tüm ekran» kullan."
+                    )
+                    return
+                }
+                if #available(macOS 14.0, *) {
+                    filter = SCContentFilter(desktopIndependentWindow: win)
+                } else {
+                    await setStatus("Pencere kaydı için macOS 14 veya üzeri gerekli.")
+                    return
+                }
             } else {
-                filter = SCContentFilter(
-                    display: display,
-                    excludingApplications: exclude,
-                    exceptingWindows: []
-                )
+                guard let display = content.displays.first else {
+                    await setStatus("Ekran bulunamadı.")
+                    return
+                }
+
+                let exclude = content.applications.filter { $0.processID == pid }
+                if exclude.isEmpty {
+                    filter = SCContentFilter(display: display, excludingWindows: [])
+                    await setStatus("Uyarı: bu süreç pencereleri hariç tutulamadı (devam ediliyor).")
+                } else {
+                    filter = SCContentFilter(
+                        display: display,
+                        excludingApplications: exclude,
+                        exceptingWindows: []
+                    )
+                }
             }
 
             let cfg = SCStreamConfiguration()
             cfg.showsCursor = true
-            cfg.capturesAudio = true
+            cfg.capturesAudio = captureSystemAudio
             // Tam 4K/5K kayıt dosyayı şişirir → yükleme çok uzar. 1920 kenar üstü ölçekle.
-            let dw = display.width
-            let dh = display.height
-            let maxEdge = 1920
-            var capW = dw
-            var capH = dh
-            if dw > maxEdge || dh > maxEdge {
-                let s = min(Double(maxEdge) / Double(dw), Double(maxEdge) / Double(dh))
-                capW = max(640, (Int(Double(dw) * s) / 2) * 2)
-                capH = max(360, (Int(Double(dh) * s) / 2) * 2)
-            }
+            let (capW, capH): (Int, Int) = {
+                if let wid = captureTargetWindowID,
+                   let win = content.windows.first(where: { $0.windowID == wid }) {
+                    let f = win.frame
+                    let dw = Int(f.width.rounded())
+                    let dh = Int(f.height.rounded())
+                    let maxEdge = 1920
+                    if dw > maxEdge || dh > maxEdge {
+                        let s = min(Double(maxEdge) / Double(dw), Double(maxEdge) / Double(dh))
+                        let w = max(640, (Int(Double(dw) * s) / 2) * 2)
+                        let h = max(360, (Int(Double(dh) * s) / 2) * 2)
+                        return (w, h)
+                    }
+                    return (max(640, dw - dw % 2), max(360, dh - dh % 2))
+                }
+                guard let display = content.displays.first else { return (1280, 720) }
+                let dw = display.width
+                let dh = display.height
+                let maxEdge = 1920
+                var capW = dw
+                var capH = dh
+                if dw > maxEdge || dh > maxEdge {
+                    let s = min(Double(maxEdge) / Double(dw), Double(maxEdge) / Double(dh))
+                    capW = max(640, (Int(Double(dw) * s) / 2) * 2)
+                    capH = max(360, (Int(Double(dh) * s) / 2) * 2)
+                }
+                return (capW, capH)
+            }()
             cfg.width = capW
             cfg.height = capH
             cfg.minimumFrameInterval = CMTime(value: 1, timescale: 60)
@@ -86,12 +135,14 @@ final class ScreenRecorder: NSObject, ObservableObject {
             self.stream = newStream
             await MainActor.run {
                 self.isRecording = true
+                self.recordingStartedAt = Date()
                 self.status = "Kayıt yapılıyor…"
             }
         } catch {
             await MainActor.run {
                 self.status = "Hata: \(error.localizedDescription)"
                 self.isRecording = false
+                self.recordingStartedAt = nil
             }
         }
     }
@@ -112,6 +163,7 @@ final class ScreenRecorder: NSObject, ObservableObject {
                 }
                 await MainActor.run {
                     self.isRecording = false
+                    self.recordingStartedAt = nil
                     if let u = finalURL {
                         self.status = "Kayıt: \(u.path)"
                     } else {
@@ -121,6 +173,7 @@ final class ScreenRecorder: NSObject, ObservableObject {
             } catch {
                 await MainActor.run {
                     self.isRecording = false
+                    self.recordingStartedAt = nil
                     self.status = "Durdurma hatası: \(error.localizedDescription)"
                 }
             }
@@ -248,6 +301,7 @@ extension ScreenRecorder: SCStreamDelegate {
     func stream(_ stream: SCStream, didStopWithError error: Error) {
         DispatchQueue.main.async { [weak self] in
             self?.isRecording = false
+            self?.recordingStartedAt = nil
             self?.status = "Akış durdu: \(error.localizedDescription)"
         }
     }
