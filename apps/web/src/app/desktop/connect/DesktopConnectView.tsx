@@ -1,20 +1,11 @@
 "use client";
 
-import { SignIn, SignUp, useAuth } from "@clerk/nextjs";
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef } from "react";
 import { DesktopAutoConnectRedirect } from "@/app/desktop/connect/DesktopAutoConnectRedirect";
 import { DesktopConnectSessionPanel } from "@/app/desktop/connect/DesktopConnectSessionPanel";
-import { clerkDesktopConnectAppearance } from "@/lib/clerk-desktop-connect-appearance";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 function ConnectPageShell({
   children,
@@ -43,7 +34,13 @@ function ConnectPageShell({
   );
 }
 
-function ConnectLoading({ tagline }: { tagline?: string }) {
+function ConnectLoading({
+  tagline,
+  hint,
+}: {
+  tagline?: string;
+  hint?: string;
+}) {
   return (
     <ConnectPageShell tagline={tagline}>
       <Card className="border bg-card shadow-lg">
@@ -52,7 +49,7 @@ function ConnectLoading({ tagline }: { tagline?: string }) {
             className="size-8 animate-pulse rounded-full bg-muted"
             aria-hidden
           />
-          Yükleniyor…
+          {hint ?? "Yükleniyor…"}
         </CardContent>
       </Card>
     </ConnectPageShell>
@@ -61,71 +58,39 @@ function ConnectLoading({ tagline }: { tagline?: string }) {
 
 export function DesktopConnectView() {
   const { isLoaded, userId } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const authSignup = searchParams.get("auth") === "signup";
   const fromDesktop = searchParams.get("from_desktop") === "1";
-  const connectPath = fromDesktop
-    ? "/desktop/connect?from_desktop=1"
-    : "/desktop/connect";
-  const signUpPath = fromDesktop
-    ? "/desktop/connect?from_desktop=1&auth=signup"
-    : "/desktop/connect?auth=signup";
   const desktopTagline = fromDesktop
     ? "Girişten sonra Mac uygulaması açılır."
     : undefined;
 
-  if (!isLoaded) {
-    return <ConnectLoading tagline={desktopTagline} />;
-  }
+  const qs = searchParams.toString();
+  const didSendToClerk = useRef(false);
 
-  if (!userId) {
+  useEffect(() => {
+    if (!isLoaded || userId || didSendToClerk.current) return;
+    didSendToClerk.current = true;
+    const returnTo = qs ? `${pathname}?${qs}` : pathname;
+    const enc = encodeURIComponent(returnTo);
+    const target = authSignup
+      ? `/sign-up?redirect_url=${enc}`
+      : `/sign-in?redirect_url=${enc}`;
+    router.replace(target);
+  }, [isLoaded, userId, authSignup, pathname, qs, router]);
+
+  if (!isLoaded || !userId) {
     return (
-      <ConnectPageShell tagline={desktopTagline}>
-        <Card className="overflow-hidden border bg-card shadow-lg">
-          <CardHeader className="space-y-1 border-b bg-muted/30 px-6 pb-4 pt-6 text-center">
-            <CardTitle className="text-xl font-semibold tracking-tight">
-              {authSignup ? "Hesap oluştur" : "Oturum aç"}
-            </CardTitle>
-            <CardDescription className="text-[15px] leading-relaxed">
-              {fromDesktop
-                ? authSignup
-                  ? "Kayıt ol; tarayıcı Promptly’yi açmana izin isteyecek."
-                  : "Giriş yap; tarayıcı Promptly’yi açmana izin isteyecek."
-                : authSignup
-                  ? "Aynı hesap web kütüphanende ve Mac uygulamasında kullanılır."
-                  : "Sosyal hesap veya e‑posta ile devam et."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="px-6 pb-6 pt-5">
-            <div className="flex flex-col gap-5">
-              {authSignup ? (
-                <SignUp
-                  routing="virtual"
-                  appearance={clerkDesktopConnectAppearance}
-                  signInUrl={connectPath}
-                  forceRedirectUrl={connectPath}
-                />
-              ) : (
-                <SignIn
-                  routing="virtual"
-                  appearance={clerkDesktopConnectAppearance}
-                  signUpUrl={signUpPath}
-                  forceRedirectUrl={connectPath}
-                />
-              )}
-              <Link
-                href="/library"
-                className={cn(
-                  buttonVariants({ variant: "ghost", size: "sm" }),
-                  "text-muted-foreground",
-                )}
-              >
-                Kütüphaneye dön
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </ConnectPageShell>
+      <ConnectLoading
+        tagline={desktopTagline}
+        hint={
+          isLoaded
+            ? "Clerk giriş sayfasına yönlendiriliyor…"
+            : undefined
+        }
+      />
     );
   }
 

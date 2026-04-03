@@ -2,8 +2,6 @@ import { SignUp } from "@clerk/nextjs";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isClerkConfigured } from "@/lib/clerk-config";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -26,6 +24,7 @@ export default async function SignUpPage({ searchParams }: Props) {
 
   const sp = await searchParams;
   const afterSign = safeInternalRedirect(sp.redirect_url) ?? "/library";
+  const desktopConnect = afterSign.includes("from_desktop=1");
 
   return (
     <div className="flex min-h-svh flex-col items-center justify-center bg-muted/50 p-4">
@@ -33,7 +32,9 @@ export default async function SignUpPage({ searchParams }: Props) {
         <CardHeader className="text-center">
           <CardTitle>Hesap oluştur</CardTitle>
           <CardDescription>
-            Promptly ile async video kütüphaneni kullanmaya başla.
+            {desktopConnect
+              ? "Hesabını oluştur; ardından Mac uygulamasına bağlanacaksın."
+              : "Promptly ile async video kütüphaneni kullanmaya başla."}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-4">
@@ -49,10 +50,7 @@ export default async function SignUpPage({ searchParams }: Props) {
           />
           <Link
             href="/library"
-            className={cn(
-              buttonVariants({ variant: "ghost", size: "sm" }),
-              "text-muted-foreground",
-            )}
+            className="inline-flex h-7 items-center justify-center rounded-md px-2.5 text-[0.8rem] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             Kütüphaneye dön
           </Link>

@@ -13,7 +13,6 @@ struct DesktopRecordingHubView: View {
 
     var uploadAction: (URL) async -> Void
 
-    @State private var showSettings = false
     @State private var showWindowPicker = false
 
     private var isFullScreen: Bool {
@@ -30,11 +29,6 @@ struct DesktopRecordingHubView: View {
         }
         .frame(minWidth: 520, minHeight: 460)
         .background(Color(nsColor: .windowBackgroundColor))
-        .sheet(isPresented: $showSettings) {
-            DesktopSettingsSheet(uploadLog: $uploadLog)
-                .environmentObject(recorder)
-                .environmentObject(desktop)
-        }
         .sheet(isPresented: $showWindowPicker) {
             DesktopWindowPickerSheet()
                 .environmentObject(recorder)
@@ -72,8 +66,12 @@ struct DesktopRecordingHubView: View {
 
                 Spacer(minLength: 0)
 
-                railIconButton(systemName: "gearshape.fill", label: "Ayarlar", enabled: true) {
-                    showSettings = true
+                railIconButton(
+                    systemName: "rectangle.portrait.and.arrow.right",
+                    label: "Çıkış",
+                    enabled: !recorder.isRecording
+                ) {
+                    desktop.signOut()
                 }
             }
             .padding(.vertical, 14)
@@ -132,20 +130,8 @@ struct DesktopRecordingHubView: View {
 
     private var centerPanel: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Kayıt")
-                    .font(.title3.weight(.bold))
-                Spacer()
-                Button {
-                    showSettings = true
-                } label: {
-                    Image(systemName: "gearshape")
-                        .font(.title3)
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-                .help("Ayarlar")
-            }
+            Text("Kayıt")
+                .font(.title3.weight(.bold))
 
             VStack(spacing: 10) {
                 sourceRow(
@@ -260,7 +246,8 @@ struct DesktopRecordingHubView: View {
             .keyboardShortcut("r", modifiers: [.command])
             .padding(.top, 4)
 
-            if let url = recorder.lastRecordingURL, !recorder.isRecording, desktop.canUpload {
+            if let url = recorder.lastRecordingURL, !recorder.isRecording, desktop.hasValidDesktopSession,
+               desktop.canUpload {
                 Button {
                     Task { await uploadAction(url) }
                 } label: {
@@ -299,6 +286,14 @@ struct DesktopRecordingHubView: View {
                     .font(.caption)
                     .foregroundStyle(recorder.status.contains("Hata") ? .red : .secondary)
                     .lineLimit(3)
+            }
+
+            if !uploadLog.isEmpty {
+                Text(uploadLog)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             Spacer(minLength: 0)

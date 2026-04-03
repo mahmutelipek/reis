@@ -13,7 +13,7 @@ enum DesktopUploadError: LocalizedError {
         case .invalidURL:
             return "Geçersiz API adresi."
         case .missingAuth:
-            return "Oturum yok: giriş için ayarlardan «Tarayıcıda tekrar giriş» kullan veya gelişmişte API anahtarı gir."
+            return "Oturum süresi dolmuş veya geçersiz. Uygulamayı kapatıp giriş ekranından tekrar Clerk ile bağlan."
         case let .uploadFailed(err):
             return err?.localizedDescription ?? "Mux yükleme başarısız."
         }

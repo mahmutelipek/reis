@@ -3,6 +3,8 @@ import Foundation
 
 /// Sabit API kökü (PromptlyConfig) + tarayıcıdan /desktop/connect ile alınan oturum jetonu veya DESKTOP_APIKEY.
 final class DesktopSettings: ObservableObject {
+    /// Sunucu ile aynı: `desktop-session-token.ts` — sadece buna sahip kullanıcı «giriş yapmış» sayılır.
+    static let desktopSessionTokenPrefix = "pdtk1."
     private enum K {
         static let apiBaseOverride = "promptly.apiBaseOverride"
         static let sessionToken = "promptly.sessionToken"
@@ -52,6 +54,12 @@ final class DesktopSettings: ObservableObject {
         return !t.isEmpty || !l.isEmpty
     }
 
+    /// Clerk → web oturumu; hub yalnızca bunda açılır (rastgele metin / sadece API key yetmez).
+    var hasValidDesktopSession: Bool {
+        let t = sessionToken.trimmingCharacters(in: .whitespacesAndNewlines)
+        return t.hasPrefix(Self.desktopSessionTokenPrefix) && t.count > Self.desktopSessionTokenPrefix.count + 8
+    }
+
     /// `promptly://connect?token=...` (Info.plist’te URL scheme kayıtlı olmalı).
     func handleConnectURL(_ url: URL) {
         guard url.scheme?.lowercased() == "promptly" else { return }
@@ -59,7 +67,8 @@ final class DesktopSettings: ObservableObject {
         guard
             let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems,
             let token = items.first(where: { $0.name == "token" })?.value?.trimmingCharacters(in: .whitespacesAndNewlines),
-            !token.isEmpty
+            token.hasPrefix(Self.desktopSessionTokenPrefix),
+            token.count > Self.desktopSessionTokenPrefix.count + 8
         else { return }
         sessionToken = token
     }
@@ -68,12 +77,21 @@ final class DesktopSettings: ObservableObject {
         sessionToken = ""
     }
 
+    /// Hub’dan çıkış: oturum + yedek anahtar temizlenir (sunucu URL’si kalır).
+    func signOut() {
+        sessionToken = ""
+        legacyDesktopKey = ""
+    }
+
+    /// Doğrudan Clerk’in çalışan tam sayfa girişine; bittiğinde `/desktop/connect?from_desktop=1` döner.
     var browserConnectURL: URL? {
         let base = resolvedAPIBase.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard var c = URLComponents(string: base + "/desktop/connect") else {
-            return URL(string: base + "/desktop/connect")
+        guard var c = URLComponents(string: base + "/sign-in") else {
+            return URL(string: base + "/sign-in")
         }
-        c.queryItems = [URLQueryItem(name: "from_desktop", value: "1")]
+        c.queryItems = [
+            URLQueryItem(name: "redirect_url", value: "/desktop/connect?from_desktop=1"),
+        ]
         return c.url
     }
 

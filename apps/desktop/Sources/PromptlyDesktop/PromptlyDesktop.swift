@@ -39,9 +39,7 @@ struct ContentView: View {
     @State private var uploadProgress: Double?
 
     private var hasCredential: Bool {
-        let t = desktop.sessionToken.trimmingCharacters(in: .whitespacesAndNewlines)
-        let l = desktop.legacyDesktopKey.trimmingCharacters(in: .whitespacesAndNewlines)
-        return !t.isEmpty || !l.isEmpty
+        desktop.hasValidDesktopSession
     }
 
     var body: some View {
@@ -64,7 +62,8 @@ struct ContentView: View {
             uploadAction: upload
         )
         .onChange(of: recorder.lastRecordingURL) { newURL in
-            guard desktop.autoUploadAfterRecording,
+            guard desktop.hasValidDesktopSession,
+                  desktop.autoUploadAfterRecording,
                   desktop.canUpload,
                   let file = newURL,
                   !recorder.isRecording
@@ -74,7 +73,7 @@ struct ContentView: View {
     }
 
     private func upload(_ file: URL) async {
-        guard desktop.canUpload else { return }
+        guard desktop.hasValidDesktopSession, desktop.canUpload else { return }
         uploadBusy = true
         uploadProgress = nil
         let bytes = (try? FileManager.default.attributesOfItem(atPath: file.path)[.size] as? NSNumber)?.int64Value ?? 0
